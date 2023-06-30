@@ -2,7 +2,7 @@
 An open source Minecraft Launcher written in Go which uses Qt for GUI. 
 
 ### Supported operating systems
-FireCraft currently supports only Linux. Support for windows will be in the future
+FireCraft currently supports Linux and Windows.
 
 ### Supported Minecraft Versions
 All versions without 1.8.x should work. 1.8.x needs some work to get it working.

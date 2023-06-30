@@ -11,6 +11,13 @@ import (
 )
 
 func (v VersionJSON) FetchLibraries(log chan string) error {
+	var classpathSeparator string
+	if OperatingSystem == "windows" {
+		classpathSeparator = ";"
+	} else {
+		classpathSeparator = ":"
+	}
+
 	verClass := filepath.Join(VersionDir, v.Id, v.Id+".jar")
 	classpath := ""
 
@@ -54,7 +61,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 					return err
 				}
 			}
-			classpath += ":" + pth
+			classpath += classpathSeparator + pth
 		}
 
 		if j.Downloads.Artifact == nil && j.Natives == nil && j.Name != nil {
@@ -65,7 +72,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 			name := split[1]
 			ver := split[2]
 
-			classpath += ":" + filepath.Join(LibrariesDir, category, name, ver, fmt.Sprintf("%s-%s.jar", name, ver))
+			classpath += classpathSeparator + filepath.Join(LibrariesDir, category, name, ver, fmt.Sprintf("%s-%s.jar", name, ver))
 		}
 
 		if j.Natives != nil {
@@ -79,7 +86,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 						return err
 					}
 				}
-				classpath += ":" + pth
+				classpath += classpathSeparator + pth
 
 				if j.Extract != nil {
 					exclude := []string{}
@@ -98,7 +105,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 		}
 	}
 
-	classpath += ":" + verClass
+	classpath += classpathSeparator + verClass
 	log <- classpath
 	return nil
 }
