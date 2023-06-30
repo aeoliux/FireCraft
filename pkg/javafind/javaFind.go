@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/zapomnij/firecraft/pkg/downloader"
@@ -64,6 +65,21 @@ func FindJava(version uint) *string {
 								return &jvbin
 							}
 						}
+					}
+				}
+			}
+		}
+	} else if downloader.OperatingSystem == "windows" {
+		dirnames := []string{"C:\\Program Files\\Java", "C:\\Program Files (x86_64)\\Java"}
+		for _, jvDir := range dirnames {
+			stat, err := os.Stat(jvDir)
+			if !os.IsNotExist(err) && stat.IsDir() {
+				javaDirs := []string{filepath.Join(jvDir, fmt.Sprintf("jre-1.%d", version)), filepath.Join(jvDir, fmt.Sprintf("jre-%d", version))}
+				for _, vmDir := range javaDirs {
+					stat, err := os.Stat(vmDir)
+					if !os.IsNotExist(err) && stat.IsDir() {
+						ret := filepath.Join(vmDir, "bin", "java.exe")
+						return &ret
 					}
 				}
 			}

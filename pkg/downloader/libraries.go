@@ -56,7 +56,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 			pth := filepath.Join(LibrariesDir, j.Downloads.Artifact.Path)
 			if !IsExist(pth) {
 				log <- "downloader: downloading library '" + *j.Name + "'"
-				if err := getLib(pth, j.Downloads.Artifact.Url); err != nil {
+				if err := getLib(path.Join(strings.Split(pth, "\\")...), j.Downloads.Artifact.Url); err != nil {
 					log <- "error: " + err.Error()
 					return err
 				}
@@ -81,7 +81,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 				pth := filepath.Join(LibrariesDir, classifier.Path)
 				if !IsExist(pth) {
 					log <- "downloader: downloading native '" + classifier.Path + "'"
-					if err := getLib(pth, classifier.Url); err != nil {
+					if err := getLib(path.Join(strings.Split(pth, "\\")...), classifier.Url); err != nil {
 						log <- "error: " + err.Error()
 						return err
 					}
