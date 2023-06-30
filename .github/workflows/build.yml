@@ -1,0 +1,81 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    container: ${{ matrix.container }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - linux
+          - macos
+          - windows
+
+        include:
+          - os: ubuntu-latest
+            target: linux
+            cache: |
+              ~/.cache/go-build
+              ~/go/pkg/mod
+            deps: sudo apt install -y libgtk-4-dev
+            files: ./firecraft
+
+          - os: macos-latest
+            target: macos
+            cache: |
+              ~/Library/Caches/go-build
+              ~/go/pkg/mod
+            deps: brew install qt@5
+            files: ./firecraft
+
+          - os: ubuntu-latest
+            target: windows
+            cache: |
+              ~/.cache/go-build
+              ~/go/pkg/mod
+            deps: dnf install -y golang mingw64-gcc mingw64-qt5-qtbase-static
+            files: ./firecraft.exe
+            container: fedora
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        if: ${{ matrix.target != 'windows' }}
+        uses: actions/setup-go@v3
+
+      - name: Install dependencies
+        run: ${{ matrix.deps }}
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ matrix.cache }}
+          key: ${{ matrix.target }}-go-${{ hashFiles('**/go.mod') }}
+          restore-keys: ${{ matrix.target }}-go-
+
+      - name: Build
+        if: ${{ matrix.target != 'windows' }}
+        run: make firecraft
+
+      - name: Build
+        if: ${{ matrix.target == 'windows' }}
+        run: GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ MSYS2_ARCH=x86_64 go build -v -o firecraft.exe ./bin/firecraft
+
+      - name: List
+        run: ls -lah .
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-${{ matrix.target }}
+          path: ${{ matrix.files }}
