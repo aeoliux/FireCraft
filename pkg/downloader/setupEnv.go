@@ -2,7 +2,7 @@ package downloader
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 )
 
@@ -33,16 +33,16 @@ func SetUpVariables(dir *string) {
 	if dir != nil {
 		MinecraftDir = *dir
 	} else if homedir == "" {
-		MinecraftDir = path.Join(".", ".minecraft")
+		MinecraftDir = filepath.Join(".", ".minecraft")
 	} else {
-		MinecraftDir = path.Join(homedir, ".minecraft")
+		MinecraftDir = filepath.Join(homedir, ".minecraft")
 	}
 
-	VersionDir = path.Join(MinecraftDir, "versions")
-	AssetsDir = path.Join(MinecraftDir, "assets")
-	LibrariesDir = path.Join(MinecraftDir, "libraries")
-	NativesDir = path.Join(MinecraftDir, "natives")
-	LauncherDir = path.Join(MinecraftDir, "launcher")
+	VersionDir = filepath.Join(MinecraftDir, "versions")
+	AssetsDir = filepath.Join(MinecraftDir, "assets")
+	LibrariesDir = filepath.Join(MinecraftDir, "libraries")
+	NativesDir = filepath.Join(MinecraftDir, "natives")
+	LauncherDir = filepath.Join(MinecraftDir, "launcher")
 }
 
 func MakeAllDirs(dir *string) error {

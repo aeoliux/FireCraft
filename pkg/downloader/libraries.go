@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/zapomnij/firecraft/pkg/unzip"
 )
 
 func (v VersionJSON) FetchLibraries(log chan string) error {
-	verClass := path.Join(VersionDir, v.Id, v.Id+".jar")
+	verClass := filepath.Join(VersionDir, v.Id, v.Id+".jar")
 	classpath := ""
 
 	if _, err := DownloadFile(v.Downloads.Client.Url, verClass); err != nil {
@@ -45,7 +46,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 			}
 		}
 		if j.Downloads.Artifact != nil {
-			pth := path.Join(LibrariesDir, j.Downloads.Artifact.Path)
+			pth := filepath.Join(LibrariesDir, j.Downloads.Artifact.Path)
 			if !IsExist(pth) {
 				log <- "downloader: downloading library '" + *j.Name + "'"
 				if err := getLib(pth, j.Downloads.Artifact.Url); err != nil {
@@ -64,13 +65,13 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 			name := split[1]
 			ver := split[2]
 
-			classpath += ":" + path.Join(LibrariesDir, category, name, ver, fmt.Sprintf("%s-%s.jar", name, ver))
+			classpath += ":" + filepath.Join(LibrariesDir, category, name, ver, fmt.Sprintf("%s-%s.jar", name, ver))
 		}
 
 		if j.Natives != nil {
 			if native, ok := (*j.Natives)[OperatingSystem]; ok {
 				classifier := (*j.Downloads.Classifiers)[native]
-				pth := path.Join(LibrariesDir, classifier.Path)
+				pth := filepath.Join(LibrariesDir, classifier.Path)
 				if !IsExist(pth) {
 					log <- "downloader: downloading native '" + classifier.Path + "'"
 					if err := getLib(pth, classifier.Url); err != nil {

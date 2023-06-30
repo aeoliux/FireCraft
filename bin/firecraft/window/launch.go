@@ -15,10 +15,12 @@ func (fw *FWindow) Launch() {
 	selected := fw.profilesSelector.CurrentText()
 	if selected == "New profile" {
 		fw.appendToLog("launcher: template profile selected\n")
+		fw.end()
 		return
 	}
 	if fw.usernameTv.Text() == "" {
 		fw.appendToLog("launcher: missing username\n")
+		fw.end()
 		return
 	}
 
@@ -31,6 +33,7 @@ func (fw *FWindow) Launch() {
 	vjson, err := downloader.NewClientJSON(*vm, prof.LastVersionId)
 	if err != nil {
 		fw.appendToLog(fmt.Sprintf("launcher: version %s error '%s'\n", prof.LastVersionId, err))
+		fw.end()
 		return
 	}
 
@@ -38,6 +41,7 @@ func (fw *FWindow) Launch() {
 		jbin := javafind.FindJava(vjson.JavaVersion.MajorVersion)
 		if jbin == nil {
 			fw.appendToLog("launcher: failed to find Java automatically. Specify Java binary path in profile\n")
+			fw.end()
 			return
 		}
 
@@ -79,6 +83,10 @@ func (fw *FWindow) Launch() {
 		fw.appendToLog("launcher: Minecraft exited with zero exit status (error hasn't occurred)\n")
 	}
 
+	fw.end()
+}
+
+func (fw *FWindow) end() {
 	fw.Window.SetVisible(true)
 	fw.playBt.SetEnabled(true)
 }

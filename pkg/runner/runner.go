@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/zapomnij/firecraft/pkg/downloader"
@@ -37,7 +37,7 @@ func NewRunner(username, javabinary, classpath string, javaargs string, verjson 
 }
 
 func (r Runner) parseJVMArg(arg string) string {
-	arg = strings.ReplaceAll(arg, "${natives_directory}", path.Join(downloader.NativesDir, r.Version.Id))
+	arg = strings.ReplaceAll(arg, "${natives_directory}", filepath.Join(downloader.NativesDir, r.Version.Id))
 	arg = strings.ReplaceAll(arg, "${launcher_name}", "firecraft")
 	arg = strings.ReplaceAll(arg, "${launcher_version}", "1")
 	arg = strings.ReplaceAll(arg, "${classpath}", r.Classpath)
@@ -74,9 +74,9 @@ func (r Runner) parseMCArg(arg string) string {
 		return r.Version.Assets
 	case "${assets_root}", "${game_assets}":
 		if r.AssetIndex.Virtual {
-			return path.Join(downloader.AssetsDir, "virtual", r.Version.Assets)
+			return filepath.Join(downloader.AssetsDir, "virtual", r.Version.Assets)
 		} else if r.AssetIndex.MapToResources {
-			return path.Join(downloader.MinecraftDir, "resources")
+			return filepath.Join(downloader.MinecraftDir, "resources")
 		}
 		return downloader.AssetsDir
 	case "${auth_uuid}":
