@@ -70,7 +70,7 @@ func FindJava(version uint) *string {
 			}
 		}
 	} else if downloader.OperatingSystem == "windows" {
-		dirnames := []string{"C:\\Program Files\\Java", "C:\\Program Files (x86_64)\\Java"}
+		dirnames := []string{"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"}
 		for _, jvDir := range dirnames {
 			stat, err := os.Stat(jvDir)
 			if !os.IsNotExist(err) && stat.IsDir() {
