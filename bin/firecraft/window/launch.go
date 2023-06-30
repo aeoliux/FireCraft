@@ -69,11 +69,14 @@ func (fw *FWindow) Launch() {
 		}
 	}
 
+	fw.appendToLog("launcher: starting Minecraft\n")
 	run := runner.NewRunner(fw.usernameTv.Text(), prof.JavaBin, classpath, prof.JavaArgs, *vjson, downloader.Ai)
 
 	fw.Window.SetVisible(false)
 	if err := run.Run(); err != nil {
 		fw.appendToLog(fmt.Sprintf("launcher: %s\n", err))
+	} else {
+		fw.appendToLog("launcher: Minecraft exited with zero exit status (error hasn't occurred)\n")
 	}
 
 	fw.Window.SetVisible(true)
