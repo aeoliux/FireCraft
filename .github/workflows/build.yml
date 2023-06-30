@@ -9,7 +9,6 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
 
-    container: ${{ matrix.container }}
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +23,7 @@ jobs:
             cache: |
               ~/.cache/go-build
               ~/go/pkg/mod
-            deps: sudo apt install -y libgtk-4-dev
+            build: make firecraft
             files: ./firecraft
 
           - os: macos-latest
@@ -32,28 +31,23 @@ jobs:
             cache: |
               ~/Library/Caches/go-build
               ~/go/pkg/mod
-            deps: brew install qt@5
+            build: make firecraft
             files: ./firecraft
 
-          - os: ubuntu-latest
+          - os: windows-latest
             target: windows
             cache: |
-              ~/.cache/go-build
-              ~/go/pkg/mod
-            deps: dnf install -y golang mingw64-gcc mingw64-qt5-qtbase-static
+              \AppData\Local\go-build
+              ~\go\pkg\mod
+            build: GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ MSYS2_ARCH=x86_64 go build -v -o firecraft.exe ./bin/firecraft
             files: ./firecraft.exe
-            container: fedora
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Set up Go
-        if: ${{ matrix.target != 'windows' }}
         uses: actions/setup-go@v3
-
-      - name: Install dependencies
-        run: ${{ matrix.deps }}
 
       - name: Cache
         uses: actions/cache@v3
@@ -63,15 +57,7 @@ jobs:
           restore-keys: ${{ matrix.target }}-go-
 
       - name: Build
-        if: ${{ matrix.target != 'windows' }}
-        run: make firecraft
-
-      - name: Build
-        if: ${{ matrix.target == 'windows' }}
-        run: GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ MSYS2_ARCH=x86_64 go build -v -o firecraft.exe ./bin/firecraft
-
-      - name: List
-        run: ls -lah .
+        run: ${{ matrix.build }}
         shell: bash
 
       - name: Upload artifact
