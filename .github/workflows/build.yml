@@ -23,7 +23,9 @@ jobs:
             cache: |
               ~/.cache/go-build
               ~/go/pkg/mod
-            build: make deploy
+            build: |
+              GO111MODULE=off go get ./bin/firecraft/
+              make deploy
             files: ./deploy/linux/*
 
           - os: macos-latest
@@ -31,7 +33,9 @@ jobs:
             cache: |
               ~/Library/Caches/go-build
               ~/go/pkg/mod
-            build: make deploy
+            build: |
+              GO111MODULE=off go get ./bin/firecraft/
+              make deploy
             files: ./deploy/macos/*
 
           - os: windows-latest
@@ -39,7 +43,9 @@ jobs:
             cache: |
               \AppData\Local\go-build
               ~\go\pkg\mod
-            build: make deploy
+            build: |
+              GO111MODULE=off go get ./bin/firecraft/
+              make deploy
             files: ./deploy/windows/*
 
     steps:
