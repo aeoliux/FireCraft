@@ -23,6 +23,7 @@ jobs:
             cache: |
               ~/.cache/go-build
               ~/go/pkg/mod
+            deps: sudo apt install -y libgl1-mesa-dev
             build: make deploy
             files: ./deploy/linux/*
 
@@ -32,15 +33,15 @@ jobs:
               ~/Library/Caches/go-build
               ~/go/pkg/mod
             build: make deploy
-            files: ./deploy/macos/*
+            files: ./deploy/darwin/*
 
           - os: windows-latest
             target: windows
             cache: |
               \AppData\Local\go-build
               ~\go\pkg\mod
-            build: make deploy
-            files: ./deploy/windows/*
+            build: go build -v -o firecraft.exe .
+            files: ./firecraft.exe
 
     steps:
       - name: Checkout
@@ -56,9 +57,12 @@ jobs:
           key: ${{ matrix.target }}-go-${{ hashFiles('**/go.mod') }}
           restore-keys: ${{ matrix.target }}-go-
 
+      - name: Install dependencies
+        if: ${{ matrix.deps != null }}
+        run: ${{ matrix.deps }}
+
       - name: Build
         run: ${{ matrix.build }}
-        shell: bash
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
