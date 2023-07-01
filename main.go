@@ -6,8 +6,8 @@ import (
 
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"github.com/zapomnij/firecraft/bin/firecraft/window"
 	"github.com/zapomnij/firecraft/pkg/downloader"
+	"github.com/zapomnij/firecraft/window"
 )
 
 var qApp *widgets.QApplication
