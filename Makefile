@@ -8,7 +8,7 @@ go.sum:
 
 deploy: clean go.sum $(QTDEPLOY)
 	mkdir -p ~/go/src/github.com/zapomnij
-	cp -pr . ~/go/src/github.com/zapomnij/firecraft
+	cp -pr $(shell pwd) ~/go/src/github.com/zapomnij/firecraft
 	GO111MODULE=off $(QTDEPLOY) build desktop .
 	rm -rf linux windows macos
 
