@@ -1,12 +1,9 @@
 GO ?= go
 QTDEPLOY ?= $(subst \,/,$(shell go env GOPATH)/bin/qtdeploy)
 
-all: go.sum deploy
+all: deploy
 
-go.sum:
-	go get -v .
-
-deploy: clean go.sum $(QTDEPLOY)
+deploy: clean $(QTDEPLOY)
 	mkdir -p $(shell go env GOPATH)/src/github.com/zapomnij
 	cp -pr $(shell pwd) $(shell go env GOPATH)/src/github.com/zapomnij/firecraft
 	GO111MODULE=off $(QTDEPLOY) build desktop .
@@ -15,10 +12,10 @@ deploy: clean go.sum $(QTDEPLOY)
 $(QTDEPLOY):
 	GO111MODULE=off go get -v github.com/therecipe/qt/cmd/...
 
-firecraft: go.sum
+firecraft:
 	go build -v .
 
-%: go.sum bin/%/main.go
+%: bin/%/main.go
 	${GO} build -o $@ $^
 
 clean:
