@@ -26,21 +26,21 @@ jobs:
             build: make deploy
             files: ./deploy/linux/*
 
-          # - os: macos-latest
-          #   target: macos
-          #   cache: |
-          #     ~/Library/Caches/go-build
-          #     ~/go/pkg/mod
-          #   build: make deploy
-          #   files: ./firecraft
+          - os: macos-latest
+            target: macos
+            cache: |
+              ~/Library/Caches/go-build
+              ~/go/pkg/mod
+            build: make deploy
+            files: ./deploy/macos/*
 
-          # - os: windows-latest
-          #   target: windows
-          #   cache: |
-          #     \AppData\Local\go-build
-          #     ~\go\pkg\mod
-          #   build: make deploy
-          #   files: ./firecraft.exe
+          - os: windows-latest
+            target: windows
+            cache: |
+              \AppData\Local\go-build
+              ~\go\pkg\mod
+            build: make deploy
+            files: ./deploy/windows/*
 
     steps:
       - name: Checkout
