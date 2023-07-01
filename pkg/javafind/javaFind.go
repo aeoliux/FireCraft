@@ -21,23 +21,16 @@ func FindJava(version uint) *string {
 		_, err := os.Stat("/usr/bin/java")
 		if !os.IsNotExist(err) {
 			prelink, err := os.Readlink("/usr/bin/java")
-			if err != nil || prelink == "/usr/bin/java" {
-				return nil
-			}
-
-			if strings.HasSuffix(prelink, "/jre/bin/java") {
-				jvms = append(dirnames, path.Dir(prelink)+"/../../../")
-			} else if strings.HasSuffix(prelink, "/bin/java") {
-				jvms = append(dirnames, path.Dir(prelink)+"/../../")
+			if err == nil || prelink != "/usr/bin/java" {
+				if strings.HasSuffix(prelink, "/jre/bin/java") {
+					jvms = append(dirnames, path.Dir(prelink)+"/../../../")
+				} else if strings.HasSuffix(prelink, "/bin/java") {
+					jvms = append(dirnames, path.Dir(prelink)+"/../../")
+				}
 			}
 		}
 
-		if len(jvms) == 0 {
-			jvms = []string{
-				"/usr/lib/jvm",
-				"/usr/lib64/jvm",
-			}
-		}
+		jvms = append(jvms, "/usr/lib/jvm", "/usr/lib64/jvm")
 
 		dirnames = []string{
 			fmt.Sprintf("java-%d-openjdk", version),

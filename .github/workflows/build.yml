@@ -23,24 +23,24 @@ jobs:
             cache: |
               ~/.cache/go-build
               ~/go/pkg/mod
-            build: make firecraft
-            files: ./firecraft
+            build: make deploy
+            files: ./deploy/linux/*
 
-          - os: macos-latest
-            target: macos
-            cache: |
-              ~/Library/Caches/go-build
-              ~/go/pkg/mod
-            build: make firecraft
-            files: ./firecraft
+          # - os: macos-latest
+          #   target: macos
+          #   cache: |
+          #     ~/Library/Caches/go-build
+          #     ~/go/pkg/mod
+          #   build: make deploy
+          #   files: ./firecraft
 
-          - os: windows-latest
-            target: windows
-            cache: |
-              \AppData\Local\go-build
-              ~\go\pkg\mod
-            build: GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ MSYS2_ARCH=x86_64 go build -v -o firecraft.exe ./bin/firecraft
-            files: ./firecraft.exe
+          # - os: windows-latest
+          #   target: windows
+          #   cache: |
+          #     \AppData\Local\go-build
+          #     ~\go\pkg\mod
+          #   build: make deploy
+          #   files: ./firecraft.exe
 
     steps:
       - name: Checkout

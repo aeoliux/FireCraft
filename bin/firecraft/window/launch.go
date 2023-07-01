@@ -2,6 +2,7 @@ package window
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/zapomnij/firecraft/pkg/downloader"
@@ -10,6 +11,12 @@ import (
 )
 
 func (fw *FWindow) Launch() {
+	if err := os.Chdir(downloader.MinecraftDir); err != nil {
+		fw.appendToLog("launcher: failed to change to .minecraft directory\n")
+		fw.end()
+		return
+	}
+
 	fw.playBt.SetEnabled(false)
 
 	selected := fw.profilesSelector.CurrentText()
@@ -27,6 +34,10 @@ func (fw *FWindow) Launch() {
 	prof := lpf.Profiles[selected]
 	if prof.GameDir != "" {
 		downloader.MakeAllDirs(&prof.GameDir)
+	}
+
+	if wd, err := os.Getwd(); err == nil {
+		fw.appendToLog(fmt.Sprintf("launcher: current working directory '%s'. Selected version is %s\n", wd, prof.LastVersionId))
 	}
 
 	fw.appendToLog(fmt.Sprintf("launcher: downloading %s.json\n", prof.LastVersionId))
@@ -83,6 +94,9 @@ func (fw *FWindow) Launch() {
 		fw.appendToLog("launcher: Minecraft exited with zero exit status (error hasn't occurred)\n")
 	}
 
+	if err := os.Chdir(downloader.LauncherDir); err != nil {
+		fw.appendToLog("launcher: failed to change to .minecraft/launcher directory\n")
+	}
 	fw.end()
 }
 

@@ -14,8 +14,8 @@ var qApp *widgets.QApplication
 
 func main() {
 	downloader.MakeAllDirs(nil)
-	if err := os.Chdir(downloader.MinecraftDir); err != nil {
-		log.Println("WARN: failed to change to minecraft directory")
+	if err := os.Chdir(downloader.LauncherDir); err != nil {
+		log.Println("WARN: failed to change to .minecraft/launcher directory")
 	}
 
 	qApp = widgets.NewQApplication(len(os.Args), os.Args)
