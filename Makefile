@@ -4,7 +4,7 @@ QTDEPLOY ?= $(shell go env GOPATH)/bin/qtdeploy
 all: deploy
 
 deploy: $(QTDEPLOY)
-	GO111MODULE=off $(QTDEPLOY) build desktop ./bin/firecraft
+	GO111MODULE=off $(QTDEPLOY) build desktop ./bin/firecraft/main.go
 	rm -rf ./bin/firecraft/linux
 	mv ./bin/firecraft/deploy ./deploy
 
