@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 )
 
 type MinecraftAuthentication struct {
@@ -15,10 +13,12 @@ type MinecraftAuthentication struct {
 	Userhash       string
 	XstsToken      string
 	MinecraftToken string
+
+	Client *HttpClient
 }
 
-func NewMinecraftAuthentication(accessToken string) (*MinecraftAuthentication, error) {
-	m := MinecraftAuthentication{AccessToken: accessToken}
+func NewMinecraftAuthentication(accessToken string, client *HttpClient) (*MinecraftAuthentication, error) {
+	m := MinecraftAuthentication{AccessToken: accessToken, Client: client}
 	if err := m.AuthXboxLive(); err != nil {
 		return nil, err
 	}
@@ -37,13 +37,13 @@ func (m *MinecraftAuthentication) AuthXboxLive() error {
 	"Properties": {
 		"AuthMethod": "RPS",
 		"SiteName": "user.auth.xboxlive.com",
-		"RpsTicket": "d=%s",
+		"RpsTicket": "%s",
 	},
 	"RelyingParty": "http://auth.xboxlive.com",
 	"TokenType": "JWT"
 }`, m.AccessToken)
 
-	response, err := request("https://user.auth.xboxlive.com/user/authenticate", reqBody, true)
+	response, err := m.Client.POST("https://user.auth.xboxlive.com/user/authenticate", reqBody, []string{"Content-Type", "Accept"}, []string{"application/json", "application/json"})
 	if err != nil {
 		return err
 	}
@@ -81,8 +81,9 @@ func (m *MinecraftAuthentication) AuthXSTS() error {
 	"TokenType": "JWT"
 }`, m.XboxLive)
 
-	response, err := request("https://xsts.auth.xboxlive.com/xsts/authorize", reqBody, true)
+	response, err := m.Client.POST("https://xsts.auth.xboxlive.com/xsts/authorize", reqBody, []string{"Content-Type", "Accept"}, []string{"application/json", "application/json"})
 	if err != nil {
+
 		return err
 	}
 
@@ -102,8 +103,8 @@ func (m *MinecraftAuthentication) AuthXSTS() error {
 }
 
 func (m *MinecraftAuthentication) AuthenticateMinecraft() error {
-	reqBody := fmt.Sprintf(`{"identityToken": "XBL3.0 x=%s;%s"}`, m.Userhash, m.XstsToken)
-	resp, err := request("https://api.minecraftservices.com/authentication/login_with_xbox", reqBody, false)
+	reqBody := fmt.Sprintf(`{"identityToken": "XBL3.0 x=%s;%s","ensureLegacyEnabled": true}`, m.Userhash, m.XstsToken)
+	resp, err := m.Client.POST("https://api.minecraftservices.com/authentication/login_with_xbox", reqBody, []string{}, []string{})
 	if err != nil {
 		return err
 	}
@@ -124,28 +125,33 @@ func (m *MinecraftAuthentication) AuthenticateMinecraft() error {
 	return nil
 }
 
-func request(url, body string, headers bool) ([]byte, error) {
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", url, bytes.NewBufferString(body))
-	if err != nil {
-		return []byte{}, err
-	}
+// func request(url, body string, headers bool, keys, vals []string) ([]byte, error) {
+// 	client := &http.Client{}
+// 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(body))
+// 	if err != nil {
+// 		return []byte{}, err
+// 	}
 
-	if headers {
-		req.Header.Add("Content-Type", "application/json")
-		req.Header.Add("Accept", "application/json")
-	}
+// 	if headers {
+// 		req.Header.Add("Content-Type", "application/json")
+// 		req.Header.Add("Accept", "application/json")
+// 	}
+// 	if len(keys) == len(vals) {
+// 		for i := 0; i < len(keys); i++ {
+// 			req.Header.Add(keys[i], vals[i])
+// 		}
+// 	}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return []byte{}, err
-	}
-	defer resp.Body.Close()
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		return []byte{}, err
+// 	}
+// 	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return []byte{}, err
-	}
+// 	b, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		return []byte{}, err
+// 	}
 
-	return b, nil
-}
+// 	return b, nil
+// }

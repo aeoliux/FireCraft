@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/zapomnij/firecraft/pkg/auth"
 	"github.com/zapomnij/firecraft/pkg/downloader"
 	"github.com/zapomnij/firecraft/pkg/javafind"
 	"github.com/zapomnij/firecraft/pkg/runner"
@@ -25,10 +26,55 @@ func (fw *FWindow) Launch() {
 		fw.end()
 		return
 	}
+
+	accToken, uuid, haveBoughtTheGame := "", "", false
 	if fw.usernameTv.Text() == "" {
-		fw.appendToLog("launcher: missing username\n")
-		fw.end()
-		return
+		if fw.microsoft.Email.Text() != "" {
+			email := fw.microsoft.Email.Text()
+			var au *auth.Authentication
+			var err error
+			fw.appendToLog("launcher: authenticating Microsoft\n")
+			if fw.microsoft.Passwd.Text() != "" {
+				au, err = auth.NewAuthentication(email, fw.microsoft.Passwd.Text())
+				if err != nil {
+					fw.appendToLog("launcher: " + err.Error() + "\n")
+					fw.end()
+					return
+				}
+			} else {
+				fw.appendToLog("launcher: missing credentials for Microsoft authentication\n")
+				fw.end()
+				return
+			}
+
+			fw.appendToLog("launcher: authenticating Minecraft\n")
+			mc, err := auth.NewMinecraftAuthentication(au.MsAccessToken, au.HtClient)
+			if err != nil {
+				fw.appendToLog("launcher: " + err.Error() + "\n")
+				fw.end()
+				return
+			}
+
+			fw.appendToLog("launcher: fetching profile\n")
+			prof, err := mc.GetProfile()
+			if err != nil {
+				fw.appendToLog("launcher: " + err.Error() + "\n")
+				fw.end()
+				return
+			}
+
+			lpf.AuthenticationDatabase.RefreshToken = *au.MsRefreshToken
+			lpf.Save()
+
+			accToken = mc.MinecraftToken
+			uuid = prof.Id
+			fw.usernameTv.SetText(prof.Name)
+			haveBoughtTheGame = mc.OwnsGame()
+		} else {
+			fw.appendToLog("launcher: missing username\n")
+			fw.end()
+			return
+		}
 	}
 
 	prof := lpf.Profiles[selected]
@@ -86,6 +132,9 @@ func (fw *FWindow) Launch() {
 
 	fw.appendToLog("launcher: starting Minecraft\n")
 	run := runner.NewRunner(fw.usernameTv.Text(), prof.JavaBin, classpath, prof.JavaArgs, *vjson, downloader.Ai)
+	if uuid != "" && accToken != "" {
+		run.SetUpMicrosoft(uuid, accToken, haveBoughtTheGame)
+	}
 
 	fw.Window.SetVisible(false)
 	if err := run.Run(); err != nil {
@@ -101,6 +150,9 @@ func (fw *FWindow) Launch() {
 }
 
 func (fw *FWindow) end() {
+	if lpf.AuthenticationDatabase.Email != "" {
+		fw.usernameTv.SetText("")
+	}
 	fw.Window.SetVisible(true)
 	fw.playBt.SetEnabled(true)
 }

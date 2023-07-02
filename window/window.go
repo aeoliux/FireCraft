@@ -23,6 +23,8 @@ type FWindow struct {
 	logger   *widgets.QTextEdit
 	notebook *widgets.QTabWidget
 
+	microsoft *MicrosoftAuthTab
+
 	bottombar       *widgets.QWidget
 	bottombarLayout *widgets.QHBoxLayout
 	playBt          *widgets.QPushButton
@@ -37,12 +39,16 @@ type FWindow struct {
 	editProfile      *widgets.QPushButton
 }
 
+var oldemail string
+
 func NewFWindow() *FWindow {
 	var err error
 	lpf, err = loadProfiles()
 	if err != nil {
 		log.Fatalln(err)
 	}
+	oldemail = lpf.AuthenticationDatabase.Email
+
 	vm, err = downloader.GetVersionManifest()
 	if err != nil {
 		log.Fatalln(err)
@@ -99,6 +105,9 @@ func NewFWindow() *FWindow {
 	this.bottombarLayout.AddWidget(this.profilesBox, 0, core.Qt__AlignLeft)
 	this.bottombarLayout.AddWidget(this.playBt, 0, core.Qt__AlignHCenter)
 	this.bottombarLayout.AddWidget(this.userBox, 0, core.Qt__AlignRight)
+
+	this.microsoft = NewMicrosoftAuthTab(this.notebook, &this)
+	this.notebook.AddTab(this.microsoft.Main, "Microsoft Authentication")
 
 	this.layout.AddWidget(this.bottombar)
 

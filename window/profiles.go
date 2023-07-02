@@ -20,10 +20,9 @@ type LProfile struct {
 type LauncherProfiles struct {
 	Profiles               map[string]LProfile `json:"profiles"`
 	AuthenticationDatabase struct {
-		AccessToken string
-		Uuid        string
-		Username    string
-		ClientId    string
+		RefreshToken string
+		Email        string
+		Username     string
 	}
 }
 

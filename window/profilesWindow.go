@@ -38,22 +38,22 @@ func NewEditProfileWindow(parent *FWindow) *EditProfileWindow {
 	this.layout = widgets.NewQFormLayout(this.Window)
 
 	this.nameEn = widgets.NewQLineEdit(this.Window)
-	this.layout.AddRow(widgets.NewQLabel2("Name: ", this.Window, 0), this.nameEn)
+	this.layout.AddRow3("Name: ", this.nameEn)
 
 	this.gameDirEn = widgets.NewQLineEdit(this.Window)
-	this.layout.AddRow(widgets.NewQLabel2("Game directory: ", this.Window, 0), this.gameDirEn)
+	this.layout.AddRow3("Game directory: ", this.gameDirEn)
 
 	this.verList = widgets.NewQComboBox(this.Window)
 	for _, v := range vm.Versions {
 		this.verList.AddItem(fmt.Sprintf("%s %s", v.Type, v.Id), core.NewQVariant())
 	}
-	this.layout.AddRow(widgets.NewQLabel2("Version: ", this.Window, 0), this.verList)
+	this.layout.AddRow3("Version: ", this.verList)
 
 	this.javaArgsEn = widgets.NewQLineEdit(this.Window)
-	this.layout.AddRow(widgets.NewQLabel2("Java args: ", this.Window, 0), this.javaArgsEn)
+	this.layout.AddRow3("Java args: ", this.javaArgsEn)
 
 	this.javaBinEn = widgets.NewQLineEdit(this.Window)
-	this.layout.AddRow(widgets.NewQLabel2("Java binary path: ", this.Window, 0), this.javaBinEn)
+	this.layout.AddRow3("Java binary path: ", this.javaBinEn)
 
 	this.bottom = widgets.NewQWidget(this.Window, 0)
 	this.bottomLay = widgets.NewQHBoxLayout()

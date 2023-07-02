@@ -20,4 +20,4 @@ make clean firecraft
 ```
 
 ### Minecraft Premium support
-Work in progress.
+Not fully tested.

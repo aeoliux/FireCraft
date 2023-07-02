@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -34,6 +33,12 @@ func NewRunner(username, javabinary, classpath string, javaargs string, verjson 
 		Classpath:  classpath,
 		AssetIndex: assetIndex,
 	}
+}
+
+func (r *Runner) SetUpMicrosoft(uuid, accessToken string, haveBoughtTheGame bool) {
+	r.Uuid = &uuid
+	r.AccessToken = &accessToken
+	r.HaveBoughtTheGame = haveBoughtTheGame
 }
 
 func (r Runner) parseJVMArg(arg string) string {
@@ -92,7 +97,7 @@ func (r Runner) parseMCArg(arg string) string {
 	case "${clientid}":
 		return "null"
 	case "${auth_xuid}":
-		if r.AccessToken == nil {
+		if r.Xuid == nil {
 			return "null"
 		}
 		return *r.Xuid
@@ -155,7 +160,10 @@ func (r Runner) Run() error {
 		}
 	}
 
-	fmt.Println(cmd)
+	if !r.HaveBoughtTheGame {
+		cmd = append(cmd, "--demo")
+	}
+
 	run := exec.Command(cmd[0], cmd[1:]...)
 	run.Stdout = os.Stdout
 	run.Stderr = os.Stderr
