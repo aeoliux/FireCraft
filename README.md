@@ -20,4 +20,4 @@ make clean firecraft
 ```
 
 ### Minecraft Premium support
-Not fully tested. Microsoft 2FA is not supported (probably will be supported).
+Works.
