@@ -141,6 +141,7 @@ func (fw *FWindow) Launch() {
 func (fw *FWindow) end() {
 	if fw.ms.RedirectLink.Text() != "" {
 		fw.usernameTv.SetText("")
+		lpf.Save()
 	}
 	fw.Window.SetVisible(true)
 	fw.playBt.SetEnabled(true)
