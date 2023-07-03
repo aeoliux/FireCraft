@@ -23,8 +23,16 @@ clean:
 	${GO} clean
 	rm -rf mcAuth firecraft deploy
 
-linux-install: deploy
-	mkdir -p ~/.minecraft
-	rm -rf ~/.minecraft/launcher
-	cp -pr ./deploy/linux ~/.minecraft/launcher
-	desktop-file-install --dir=$(HOME)/.local/share/applications ./share/applications/firecraft.desktop
+linux-install:
+	[ ! -d ./deploy/linux ] && make deploy || exit 0
+	mkdir -p $(HOME)/.minecraft
+	rm -rf $(HOME)/.minecraft/launcher
+	cp -pr ./deploy/linux $(HOME)/.minecraft/launcher
+	[ -f ./deploy/linux/FireCraft ] && \
+		desktop-file-install --dir=$(HOME)/.local/share/applications ./share/applications/FireCraft.desktop || \
+		desktop-file-install --dir=$(HOME)/.local/share/applications ./share/applications/firecraft.desktop
+
+linux-uninstall:
+	[ -f $(HOME)/.minecraft/launcher/FireCraft -o -f $(HOME)/.minecraft/launcher/firecraft ] && \
+		rm -rf $(HOME)/.minecraft/launcher && \
+		rm -f $(HOME)/.local/share/applications/firecraft.desktop $(HOME)/.local/share/applications/FireCraft.desktop || exit 0
