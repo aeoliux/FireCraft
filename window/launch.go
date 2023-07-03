@@ -12,9 +12,11 @@ import (
 )
 
 func (fw *FWindow) Launch() {
+	defer fw.end()
+
 	if err := os.Chdir(downloader.MinecraftDir); err != nil {
 		fw.appendToLog("launcher: failed to change to .minecraft directory\n")
-		fw.end()
+		//fw.end()
 		return
 	}
 
@@ -23,27 +25,17 @@ func (fw *FWindow) Launch() {
 	selected := fw.profilesSelector.CurrentText()
 	if selected == "New profile" {
 		fw.appendToLog("launcher: template profile selected\n")
-		fw.end()
+		//fw.end()
 		return
 	}
 
 	accToken, uuid, haveBoughtTheGame := "", "", false
 	if fw.usernameTv.Text() == "" {
-		if fw.microsoft.Email.Text() != "" {
-			email := fw.microsoft.Email.Text()
-			var au *auth.Authentication
-			var err error
-			fw.appendToLog("launcher: authenticating Microsoft\n")
-			if fw.microsoft.Passwd.Text() != "" {
-				au, err = auth.NewAuthentication(email, fw.microsoft.Passwd.Text())
-				if err != nil {
-					fw.appendToLog("launcher: " + err.Error() + "\n")
-					fw.end()
-					return
-				}
-			} else {
-				fw.appendToLog("launcher: missing credentials for Microsoft authentication\n")
-				fw.end()
+		if fw.ms.RedirectLink.Text() != "" {
+			au, err := auth.NewAuthentication(fw.ms.RedirectLink.Text())
+			if err != nil {
+				fw.appendToLog("launcher: " + err.Error() + "\n")
+				//fw.end()
 				return
 			}
 
@@ -51,28 +43,25 @@ func (fw *FWindow) Launch() {
 			mc, err := auth.NewMinecraftAuthentication(au.MsAccessToken, au.HtClient)
 			if err != nil {
 				fw.appendToLog("launcher: " + err.Error() + "\n")
-				fw.end()
+				//fw.end()
 				return
 			}
 
 			fw.appendToLog("launcher: fetching profile\n")
-			prof, err := mc.GetProfile()
+			usrProf, err := mc.GetProfile()
 			if err != nil {
 				fw.appendToLog("launcher: " + err.Error() + "\n")
-				fw.end()
+				//fw.end()
 				return
 			}
 
-			lpf.AuthenticationDatabase.RefreshToken = *au.MsRefreshToken
-			lpf.Save()
-
-			accToken = mc.MinecraftToken
-			uuid = prof.Id
-			fw.usernameTv.SetText(prof.Name)
 			haveBoughtTheGame = mc.OwnsGame()
+			accToken = mc.MinecraftToken
+			uuid = usrProf.Id
+			fw.usernameTv.SetText(usrProf.Name)
 		} else {
 			fw.appendToLog("launcher: missing username\n")
-			fw.end()
+			//fw.end()
 			return
 		}
 	}
@@ -90,7 +79,7 @@ func (fw *FWindow) Launch() {
 	vjson, err := downloader.NewClientJSON(*vm, prof.LastVersionId)
 	if err != nil {
 		fw.appendToLog(fmt.Sprintf("launcher: version %s error '%s'\n", prof.LastVersionId, err))
-		fw.end()
+		//fw.end()
 		return
 	}
 
@@ -98,7 +87,7 @@ func (fw *FWindow) Launch() {
 		jbin := javafind.FindJava(vjson.JavaVersion.MajorVersion)
 		if jbin == nil {
 			fw.appendToLog("launcher: failed to find Java automatically. Specify Java binary path in profile\n")
-			fw.end()
+			//fw.end()
 			return
 		}
 
@@ -146,11 +135,11 @@ func (fw *FWindow) Launch() {
 	if err := os.Chdir(downloader.LauncherDir); err != nil {
 		fw.appendToLog("launcher: failed to change to .minecraft/launcher directory\n")
 	}
-	fw.end()
+	//fw.end()
 }
 
 func (fw *FWindow) end() {
-	if lpf.AuthenticationDatabase.Email != "" {
+	if fw.ms.RedirectLink.Text() != "" {
 		fw.usernameTv.SetText("")
 	}
 	fw.Window.SetVisible(true)

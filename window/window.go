@@ -23,7 +23,7 @@ type FWindow struct {
 	logger   *widgets.QTextEdit
 	notebook *widgets.QTabWidget
 
-	microsoft *MicrosoftAuthTab
+	ms *MSTab
 
 	bottombar       *widgets.QWidget
 	bottombarLayout *widgets.QHBoxLayout
@@ -106,10 +106,10 @@ func NewFWindow() *FWindow {
 	this.bottombarLayout.AddWidget(this.playBt, 0, core.Qt__AlignHCenter)
 	this.bottombarLayout.AddWidget(this.userBox, 0, core.Qt__AlignRight)
 
-	this.microsoft = NewMicrosoftAuthTab(this.notebook, &this)
-	this.notebook.AddTab(this.microsoft.Main, "Microsoft Authentication")
-
 	this.layout.AddWidget(this.bottombar)
+
+	this.ms = NewMSTab(this.notebook, &this)
+	this.notebook.AddTab(this.ms.widget, "MS Authentication")
 
 	this.container.SetLayout(this.layout)
 	this.Window.SetLayout(this.layout)

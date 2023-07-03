@@ -160,7 +160,7 @@ func (r Runner) Run() error {
 		}
 	}
 
-	if !r.HaveBoughtTheGame {
+	if !r.HaveBoughtTheGame && r.AccessToken != nil && r.Uuid != nil {
 		cmd = append(cmd, "--demo")
 	}
 
