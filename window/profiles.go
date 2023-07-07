@@ -24,6 +24,8 @@ type LauncherProfiles struct {
 		Email        string
 		Username     string
 	}
+
+	PreviousProfile string
 }
 
 func (l LauncherProfiles) Save() error {

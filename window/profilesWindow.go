@@ -74,7 +74,7 @@ func NewEditProfileWindow(parent *FWindow) *EditProfileWindow {
 		if selected != "New profile" && selected != "" {
 			lpf.deleteProfile(selected)
 			lpf.Save()
-			this.parent.reloadProfileSelector()
+			this.parent.reloadProfileSelector("")
 		}
 
 		this.Window.Destroy(true, true)
@@ -140,8 +140,7 @@ func (epw *EditProfileWindow) saveProfile() bool {
 		epw.javaArgsEn.Text(),
 	}
 
-	epw.parent.reloadProfileSelector()
-	epw.parent.profilesSelector.SetCurrentIndex(findPosition(name))
+	epw.parent.reloadProfileSelector(name)
 
 	return true
 }
@@ -168,13 +167,3 @@ func FindVerById(ver string) int {
 
 	return 0
 }
-
-// func FindVerByIndex(ind int) string {
-// 	// Used loop to prevent from out of bound error
-// 	for i, j := range vm.Versions {
-// 		if i == ind {
-// 			return j.Id
-// 		}
-// 	}
-// 	return ""
-// }

@@ -81,10 +81,8 @@ func NewFWindow() *FWindow {
 	this.editProfile = widgets.NewQPushButton2("Edit profile", this.profilesBox)
 	this.editProfile.ConnectClicked(this.editProfileHandle)
 	this.profilesSelector = widgets.NewQComboBox(this.profilesBox)
-	for k := range lpf.Profiles {
-		this.profilesSelector.AddItem(k, core.NewQVariant())
-	}
-	this.profilesSelector.AddItem("New profile", core.NewQVariant())
+	this.reloadProfileSelector(lpf.PreviousProfile)
+	this.profilesSelector.ConnectCurrentTextChanged(this.updatePreviousProfile)
 
 	this.profilesLay.AddWidget(this.profilesSelector)
 	this.profilesLay.AddWidget(this.editProfile)
@@ -117,22 +115,34 @@ func NewFWindow() *FWindow {
 	return &this
 }
 
+func (fw *FWindow) updatePreviousProfile(text string) {
+	if text != "New profile" {
+		lpf.PreviousProfile = text
+		lpf.Save()
+	}
+}
+
 func (fw *FWindow) editProfileHandle(checked bool) {
 	epw := NewEditProfileWindow(fw)
 	epw.Window.Resize2(300, 200)
 	epw.Window.Show()
 }
 
-func (fw FWindow) saveUsername(text string) {
+func (fw *FWindow) saveUsername(text string) {
 	lpf.AuthenticationDatabase.Username = text
 	lpf.Save()
 }
 
-func (fw *FWindow) reloadProfileSelector() {
+func (fw *FWindow) reloadProfileSelector(set string) {
 	fw.profilesSelector.Clear()
 
+	i := 0
 	for k := range lpf.Profiles {
 		fw.profilesSelector.AddItem(k, core.NewQVariant())
+		if k == set {
+			fw.profilesSelector.SetCurrentIndex(i)
+		}
+		i++
 	}
 
 	fw.profilesSelector.AddItem("New profile", core.NewQVariant())
