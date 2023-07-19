@@ -3,6 +3,7 @@ package downloader
 import (
 	"os"
 	"path/filepath"
+	"path"
 	"runtime"
 )
 
@@ -28,6 +29,9 @@ func SetUpVariables(dir *string) {
 		}
 	case "darwin":
 		OperatingSystem = "osx"
+		homedir = os.Getenv("HOME")
+		mcDir := path.Join(homedir, "Library", "Application Support", "minecraft")
+		dir = &mcDir
 	}
 
 	if dir != nil {
