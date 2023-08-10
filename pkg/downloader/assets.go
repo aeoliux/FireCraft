@@ -27,6 +27,11 @@ func (v VersionJSON) GetAssets(log chan string) error {
 		return err
 	}
 
+	if v.AssetIndex == nil {
+		log <- "downloader: assets finished"
+		return nil
+	}
+
 	log <- "downloader: downloading asset index"
 	img, err := DownloadFile(v.AssetIndex.Url, assetIndexPath)
 	if err != nil {
@@ -67,7 +72,7 @@ func (v VersionJSON) GetAssets(log chan string) error {
 		} else {
 			out = path.Join(outDir, v.Hash)
 		}
-		if !IsExist(out) {
+		if !checkSum(out, v.Hash) {
 			log <- "downloader: downloading " + k
 			url := fmt.Sprintf("https://resources.download.minecraft.net/%s/%s", v.Hash[:2], v.Hash)
 			if _, err = DownloadFile(url, out); err != nil {

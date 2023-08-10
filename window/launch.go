@@ -20,6 +20,15 @@ func (fw *FWindow) Launch() {
 		return
 	}
 
+	fw.appendToLog("launcher: clearing natives\n")
+	if err := os.RemoveAll(downloader.NativesDir); err != nil && !os.IsNotExist(err) {
+		fw.appendToLog("launcher: failed to clear natives, game may not work properly\n")
+	}
+	if err := os.MkdirAll(downloader.NativesDir, os.ModePerm); err != nil {
+		fw.appendToLog("launcher: failed to create natives directory\n")
+		return
+	}
+
 	fw.playBt.SetEnabled(false)
 
 	selected := fw.profilesSelector.CurrentText()
@@ -132,13 +141,15 @@ func (fw *FWindow) Launch() {
 		fw.appendToLog("launcher: Minecraft exited with zero exit status (error hasn't occurred)\n")
 	}
 
-	if err := os.Chdir(downloader.LauncherDir); err != nil {
-		fw.appendToLog("launcher: failed to change to .minecraft/launcher directory\n")
-	}
 	//fw.end()
 }
 
 func (fw *FWindow) end() {
+	downloader.SetUpVariables(nil)
+	if err := os.Chdir(downloader.LauncherDir); err != nil {
+		fw.appendToLog("launcher: failed to change to .minecraft/launcher directory\n")
+	}
+
 	if fw.ms.RedirectLink.Text() != "" {
 		fw.usernameTv.SetText("")
 		lpf.Save()

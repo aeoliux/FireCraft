@@ -6,7 +6,6 @@ import (
 
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/widgets"
-	"github.com/zapomnij/firecraft/pkg/downloader"
 )
 
 type EditProfileWindow struct {
@@ -106,7 +105,6 @@ func (epw *EditProfileWindow) loadProfile() {
 		profile, ok := lpf.Profiles[selected]
 		if !ok {
 			epw.nameEn.SetText(selected)
-			epw.gameDirEn.SetText(downloader.MinecraftDir)
 			epw.verList.SetCurrentIndex(FindVerById(vm.Latest.Release))
 			epw.javaArgsEn.SetText("-Xmx2048M")
 		} else {
@@ -114,6 +112,7 @@ func (epw *EditProfileWindow) loadProfile() {
 			epw.javaBinEn.SetText(profile.JavaBin)
 			epw.javaArgsEn.SetText(profile.JavaArgs)
 			epw.verList.SetCurrentIndex(FindVerById(profile.LastVersionId))
+			epw.gameDirEn.SetText(profile.GameDir)
 		}
 	}
 }

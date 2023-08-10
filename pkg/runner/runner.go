@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,7 +43,7 @@ func (r *Runner) SetUpMicrosoft(uuid, accessToken string, haveBoughtTheGame bool
 }
 
 func (r Runner) parseJVMArg(arg string) string {
-	arg = strings.ReplaceAll(arg, "${natives_directory}", filepath.Join(downloader.NativesDir, r.Version.Id))
+	arg = strings.ReplaceAll(arg, "${natives_directory}", downloader.NativesDir)
 	arg = strings.ReplaceAll(arg, "${launcher_name}", "firecraft")
 	arg = strings.ReplaceAll(arg, "${launcher_version}", "1")
 	arg = strings.ReplaceAll(arg, "${classpath}", r.Classpath)
@@ -115,6 +116,7 @@ func (r Runner) parseMCArg(arg string) string {
 }
 
 func (r Runner) Run() error {
+	fmt.Println("a")
 	cmd := []string{r.JavaBinary}
 	cmd = append(cmd, strings.Split(r.JavaArgs, " ")...)
 
@@ -160,7 +162,7 @@ func (r Runner) Run() error {
 		}
 	}
 
-	if !r.HaveBoughtTheGame && r.AccessToken != nil && r.Uuid != nil {
+	if !r.HaveBoughtTheGame && r.AccessToken != nil {
 		cmd = append(cmd, "--demo")
 	}
 

@@ -2,8 +2,8 @@ package downloader
 
 import (
 	"os"
-	"path/filepath"
 	"path"
+	"path/filepath"
 	"runtime"
 )
 
@@ -62,9 +62,6 @@ func MakeAllDirs(dir *string) error {
 		return err
 	}
 	if err := os.MkdirAll(LibrariesDir, os.ModePerm); err != nil {
-		return err
-	}
-	if err := os.MkdirAll(NativesDir, os.ModePerm); err != nil {
 		return err
 	}
 	if err := os.MkdirAll(LauncherDir, os.ModePerm); err != nil {

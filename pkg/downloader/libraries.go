@@ -1,6 +1,8 @@
 package downloader
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path"
@@ -21,9 +23,12 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 	verClass := filepath.Join(VersionDir, v.Id, v.Id+".jar")
 	classpath := ""
 
-	if _, err := DownloadFile(v.Downloads.Client.Url, verClass); err != nil {
-		log <- "error: " + err.Error()
-		return err
+	if v.Downloads != nil && !checkSum(verClass, v.Downloads.Client.Sha1) {
+		log <- "downloader: " + v.Id + ".jar"
+		if _, err := DownloadFile(v.Downloads.Client.Url, verClass); err != nil {
+			log <- "error: " + err.Error()
+			return err
+		}
 	}
 
 	if err := os.MkdirAll(path.Join(NativesDir, v.Id), os.ModePerm); err != nil {
@@ -42,7 +47,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 						passed = true
 					}
 				} else {
-					if rule.Os.Name == OperatingSystem {
+					if rule.Os == nil || rule.Os.Name == OperatingSystem {
 						passed = false
 					}
 				}
@@ -52,9 +57,9 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 				continue
 			}
 		}
-		if j.Downloads.Artifact != nil {
+		if j.Downloads != nil && j.Downloads.Artifact != nil {
 			pth := filepath.Join(LibrariesDir, j.Downloads.Artifact.Path)
-			if !IsExist(pth) {
+			if !checkSum(pth, j.Downloads.Artifact.Sha1) {
 				log <- "downloader: downloading library '" + *j.Name + "'"
 				if err := getLib(path.Join(strings.Split(pth, "\\")...), j.Downloads.Artifact.Url); err != nil {
 					log <- "error: " + err.Error()
@@ -64,28 +69,43 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 			classpath += classpathSeparator + pth
 		}
 
-		if j.Downloads.Artifact == nil && j.Natives == nil && j.Name != nil {
+		if j.Downloads == nil && j.Natives == nil && j.Name != nil {
 			log <- "downloader: adding local library '" + *j.Name + "'"
 
 			split := strings.Split(*j.Name, ":")
-			category := split[0]
+			category := []string{LibrariesDir}
+			category = append(category, strings.Split(split[0], ".")...)
 			name := split[1]
 			ver := split[2]
 
-			classpath += classpathSeparator + filepath.Join(LibrariesDir, category, name, ver, fmt.Sprintf("%s-%s.jar", name, ver))
+			classpath += classpathSeparator + filepath.Join(filepath.Join(category...), name, ver, fmt.Sprintf("%s-%s.jar", name, ver))
 		}
 
 		if j.Natives != nil {
 			if native, ok := (*j.Natives)[OperatingSystem]; ok {
-				classifier := (*j.Downloads.Classifiers)[native]
-				pth := filepath.Join(LibrariesDir, classifier.Path)
-				if !IsExist(pth) {
-					log <- "downloader: downloading native '" + classifier.Path + "'"
-					if err := getLib(path.Join(strings.Split(pth, "\\")...), classifier.Url); err != nil {
-						log <- "error: " + err.Error()
-						return err
+				var pth string
+				if j.Downloads != nil {
+					classifier := (*j.Downloads.Classifiers)[native]
+					pth = filepath.Join(LibrariesDir, classifier.Path)
+					if !checkSum(pth, classifier.Sha1) {
+						log <- "downloader: downloading native '" + classifier.Path + "'"
+						if err := getLib(path.Join(strings.Split(pth, "\\")...), classifier.Url); err != nil {
+							log <- "error: " + err.Error()
+							return err
+						}
 					}
+				} else if j.Name != nil {
+					split := strings.Split(*j.Name, ":")
+					name := split[1]
+					ver := split[2]
+					category := []string{LibrariesDir}
+					category = append(category, strings.Split(split[0], ".")...)
+
+					pth = filepath.Join(filepath.Join(category...), name, ver, fmt.Sprintf("%s-%s-%s.jar", name, ver, native))
+				} else {
+					continue
 				}
+
 				classpath += classpathSeparator + pth
 
 				if j.Extract != nil {
@@ -94,9 +114,8 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 						exclude = *(j.Extract.Exclude)
 					}
 
-					nativesDir := path.Join(NativesDir, v.Id)
-					log <- "downloader: extracting native '" + classifier.Path + "'"
-					if err := unzip.Unzip(pth, nativesDir, exclude); err != nil {
+					log <- "downloader: extracting native '" + pth + "'"
+					if err := unzip.Unzip(pth, NativesDir, exclude); err != nil {
 						log <- "error: " + err.Error()
 						return err
 					}
@@ -118,4 +137,17 @@ func getLib(out, url string) error {
 
 	_, err := DownloadFile(url, out)
 	return err
+}
+
+func checkSum(path, sha1check string) bool {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+
+	sha1Engine := sha1.New()
+	sha1Engine.Write(data)
+	sha1Hash := hex.EncodeToString(sha1Engine.Sum(nil))
+
+	return sha1Hash == sha1check
 }

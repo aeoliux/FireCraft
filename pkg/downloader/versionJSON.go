@@ -26,7 +26,7 @@ type VersionJSON struct {
 		Game []interface{}
 		Jvm  []interface{}
 	} `json:"arguments"`
-	AssetIndex struct {
+	AssetIndex *struct {
 		Id        string
 		Sha1      string
 		Size      uint
@@ -35,7 +35,7 @@ type VersionJSON struct {
 	} `json:"assetIndex"`
 	Assets          string `json:"assets"`
 	ComplianceLevel uint   `json:"complianceLeveL"`
-	Downloads       struct {
+	Downloads       *struct {
 		Client          DownloadsEntry
 		Client_mappings DownloadsEntry
 		Server          DownloadsEntry
@@ -48,24 +48,26 @@ type VersionJSON struct {
 		MajorVersion uint
 	} `json:"javaVersion"`
 	Libraries []struct {
-		Downloads struct {
+		Downloads *struct {
 			Artifact    *LibraryDownloadEntry
 			Classifiers *map[string]struct {
-				Path string
-				Url  string
+				Path string `json:"path"`
+				Size uint   `json:"size"`
+				Sha1 string `json:"sha1"`
+				Url  string `json:"url"`
 			}
-		}
-		Name    *string
+		} `json:"downloads"`
+		Name    *string `json:"name"`
 		Extract *struct {
 			Exclude *[]string
-		}
-		Natives *map[string]string
+		} `json:"extract"`
+		Natives *map[string]string `json:"natives"`
 		Rules   *[]struct {
 			Action string
 			Os     *struct {
 				Name string
 			}
-		}
+		} `json:"rules"`
 	} `json:"libraries"`
 	Logging struct {
 		Client struct {
@@ -160,5 +162,9 @@ func mergeJSONs(a *VersionJSON, b VersionJSON) {
 
 	if a.MinecraftArguments != nil && b.MinecraftArguments != nil && a.MinecraftArguments != b.MinecraftArguments {
 		a.MinecraftArguments = b.MinecraftArguments
+	}
+
+	if a.AssetIndex == nil {
+		a.AssetIndex = b.AssetIndex
 	}
 }

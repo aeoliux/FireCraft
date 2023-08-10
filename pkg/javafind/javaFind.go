@@ -77,6 +77,8 @@ func FindJava(version uint) *string {
 				}
 			}
 		}
+	} else if downloader.OperatingSystem == "osx" {
+
 	}
 
 	return nil
