@@ -66,11 +66,10 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 					return err
 				}
 			}
-			classpath += classpathSeparator + pth
 		}
 
-		if j.Downloads == nil && j.Natives == nil && j.Name != nil {
-			log <- "downloader: adding local library '" + *j.Name + "'"
+		if j.Natives == nil && j.Name != nil {
+			log <- "downloader: adding library '" + *j.Name + "'"
 
 			split := strings.Split(*j.Name, ":")
 			category := []string{LibrariesDir}
@@ -126,6 +125,7 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 
 	classpath += classpathSeparator + verClass
 	log <- classpath
+
 	return nil
 }
 
