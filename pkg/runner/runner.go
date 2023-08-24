@@ -90,7 +90,7 @@ func (r Runner) parseMCArg(arg string) string {
 			return "null"
 		}
 		return *r.Uuid
-	case "${auth_access_token}":
+	case "${auth_access_token}", "${auth_session}":
 		if r.AccessToken == nil {
 			return "null"
 		}
