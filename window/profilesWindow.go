@@ -14,7 +14,7 @@ type EditProfileWindow struct {
 	nameEn     *widgets.QLineEdit
 	verList    *widgets.QComboBox
 	javaArgsEn *widgets.QLineEdit
-	javaBinEn  *widgets.QLineEdit
+	javaDirEn  *widgets.QLineEdit
 	gameDirEn  *widgets.QLineEdit
 
 	bottom    *widgets.QWidget
@@ -23,6 +23,9 @@ type EditProfileWindow struct {
 	cancelBt  *widgets.QPushButton
 	deleteBt  *widgets.QPushButton
 	errLabel  *widgets.QLabel
+
+	rename  bool
+	oldName string
 
 	parent *FWindow
 }
@@ -51,8 +54,8 @@ func NewEditProfileWindow(parent *FWindow) *EditProfileWindow {
 	this.javaArgsEn = widgets.NewQLineEdit(this.Window)
 	this.layout.AddRow3("Java args: ", this.javaArgsEn)
 
-	this.javaBinEn = widgets.NewQLineEdit(this.Window)
-	this.layout.AddRow3("Java binary path: ", this.javaBinEn)
+	this.javaDirEn = widgets.NewQLineEdit(this.Window)
+	this.layout.AddRow3("Java directory path: ", this.javaDirEn)
 
 	this.bottom = widgets.NewQWidget(this.Window, 0)
 	this.bottomLay = widgets.NewQHBoxLayout()
@@ -60,7 +63,7 @@ func NewEditProfileWindow(parent *FWindow) *EditProfileWindow {
 	this.okBt = widgets.NewQPushButton2("OK", this.bottom)
 	this.okBt.ConnectClicked(func(checked bool) {
 		if this.saveProfile() {
-			lpf.Save()
+			_ = lpf.Save()
 			this.Window.Destroy(true, true)
 			this.Window.DeleteLater()
 		} else {
@@ -72,7 +75,6 @@ func NewEditProfileWindow(parent *FWindow) *EditProfileWindow {
 		selected := this.nameEn.Text()
 		if selected != "New profile" && selected != "" {
 			lpf.deleteProfile(selected)
-			lpf.Save()
 			this.parent.reloadProfileSelector("")
 		}
 
@@ -109,10 +111,13 @@ func (epw *EditProfileWindow) loadProfile() {
 			epw.javaArgsEn.SetText("-Xmx2048M")
 		} else {
 			epw.nameEn.SetText(selected)
-			epw.javaBinEn.SetText(profile.JavaBin)
+			epw.javaDirEn.SetText(profile.JavaDir)
 			epw.javaArgsEn.SetText(profile.JavaArgs)
 			epw.verList.SetCurrentIndex(FindVerById(profile.LastVersionId))
 			epw.gameDirEn.SetText(profile.GameDir)
+
+			epw.rename = true
+			epw.oldName = selected
 		}
 	}
 }
@@ -124,18 +129,18 @@ func (epw *EditProfileWindow) saveProfile() bool {
 		return false
 	}
 
-	for k := range lpf.Profiles {
-		if k == name {
-			epw.verList.RemoveItem(findPosition(name))
-		}
-	}
+	//for k := range lpf.Profiles {
+	//	if k == name {
+	//		epw.verList.RemoveItem(findPosition(name))
+	//	}
+	//}
 
 	lpf.Profiles[name] = LProfile{
 		name,
 		"custom",
 		strings.Split(epw.verList.CurrentText(), " ")[1],
 		epw.gameDirEn.Text(),
-		epw.javaBinEn.Text(),
+		epw.javaDirEn.Text(),
 		epw.javaArgsEn.Text(),
 	}
 
@@ -144,18 +149,18 @@ func (epw *EditProfileWindow) saveProfile() bool {
 	return true
 }
 
-func findPosition(key string) int {
-	ind := 0
-	for k := range lpf.Profiles {
-		if k == key {
-			return ind
-		}
-
-		ind++
-	}
-
-	return 0
-}
+//func findPosition(key string) int {
+//	ind := 0
+//	for k := range lpf.Profiles {
+//		if k == key {
+//			return ind
+//		}
+//
+//		ind++
+//	}
+//
+//	return 0
+//}
 
 func FindVerById(ver string) int {
 	for i, j := range vm.Versions {

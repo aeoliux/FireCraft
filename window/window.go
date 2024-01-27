@@ -25,8 +25,8 @@ type FWindow struct {
 
 	ms *MSTab
 
-	bottombar       *widgets.QWidget
-	bottombarLayout *widgets.QHBoxLayout
+	bottomBar       *widgets.QWidget
+	bottomBarLayout *widgets.QHBoxLayout
 	playBt          *widgets.QPushButton
 
 	userBox    *widgets.QWidget
@@ -39,15 +39,12 @@ type FWindow struct {
 	editProfile      *widgets.QPushButton
 }
 
-var oldemail string
-
 func NewFWindow() *FWindow {
 	var err error
 	lpf, err = loadProfiles()
 	if err != nil {
 		log.Fatalln(err)
 	}
-	oldemail = lpf.AuthenticationDatabase.Email
 
 	vm, err = downloader.GetVersionManifest()
 	if err != nil {
@@ -69,13 +66,13 @@ func NewFWindow() *FWindow {
 	this.notebook.AddTab(this.logger, "Launcher logs")
 	this.layout.AddWidget(this.notebook)
 
-	this.bottombar = widgets.NewQWidget(this.container, 0)
-	this.bottombar.SetFixedHeight(70)
-	this.bottombarLayout = widgets.NewQHBoxLayout()
-	this.bottombarLayout.SetContentsMargins(0, 0, 0, 0)
-	this.bottombar.SetLayout(this.bottombarLayout)
+	this.bottomBar = widgets.NewQWidget(this.container, 0)
+	this.bottomBar.SetFixedHeight(70)
+	this.bottomBarLayout = widgets.NewQHBoxLayout()
+	this.bottomBarLayout.SetContentsMargins(0, 0, 0, 0)
+	this.bottomBar.SetLayout(this.bottomBarLayout)
 
-	this.profilesBox = widgets.NewQWidget(this.bottombar, 0)
+	this.profilesBox = widgets.NewQWidget(this.bottomBar, 0)
 	this.profilesLay = widgets.NewQGridLayout(this.profilesBox)
 	this.profilesBox.SetLayout(this.profilesLay)
 	this.editProfile = widgets.NewQPushButton2("Edit profile", this.profilesBox)
@@ -87,12 +84,12 @@ func NewFWindow() *FWindow {
 	this.profilesLay.AddWidget(this.profilesSelector)
 	this.profilesLay.AddWidget(this.editProfile)
 
-	this.playBt = widgets.NewQPushButton2("Play", this.bottombar)
+	this.playBt = widgets.NewQPushButton2("Play", this.bottomBar)
 	this.playBt.ConnectClicked(func(checked bool) { go this.Launch() })
 	this.playBt.SetFixedHeight(60)
 	this.playBt.SetFixedWidth(300)
 
-	this.userBox = widgets.NewQWidget(this.bottombar, 0)
+	this.userBox = widgets.NewQWidget(this.bottomBar, 0)
 	this.userLay = widgets.NewQGridLayout(this.userBox)
 	this.userLay.AddWidget(widgets.NewQLabel2("Username", this.userBox, 0))
 	this.usernameTv = widgets.NewQLineEdit2(lpf.AuthenticationDatabase.Username, this.userBox)
@@ -100,11 +97,11 @@ func NewFWindow() *FWindow {
 	this.userLay.AddWidget(this.usernameTv)
 	this.userBox.SetLayout(this.userLay)
 
-	this.bottombarLayout.AddWidget(this.profilesBox, 0, core.Qt__AlignLeft)
-	this.bottombarLayout.AddWidget(this.playBt, 0, core.Qt__AlignHCenter)
-	this.bottombarLayout.AddWidget(this.userBox, 0, core.Qt__AlignRight)
+	this.bottomBarLayout.AddWidget(this.profilesBox, 0, core.Qt__AlignLeft)
+	this.bottomBarLayout.AddWidget(this.playBt, 0, core.Qt__AlignHCenter)
+	this.bottomBarLayout.AddWidget(this.userBox, 0, core.Qt__AlignRight)
 
-	this.layout.AddWidget(this.bottombar)
+	this.layout.AddWidget(this.bottomBar)
 
 	this.ms = NewMSTab(this.notebook, &this)
 	this.notebook.AddTab(this.ms.widget, "MS Authentication")
@@ -118,7 +115,7 @@ func NewFWindow() *FWindow {
 func (fw *FWindow) updatePreviousProfile(text string) {
 	if text != "New profile" {
 		lpf.PreviousProfile = text
-		lpf.Save()
+		_ = lpf.Save()
 	}
 }
 
@@ -130,7 +127,7 @@ func (fw *FWindow) editProfileHandle(checked bool) {
 
 func (fw *FWindow) saveUsername(text string) {
 	lpf.AuthenticationDatabase.Username = text
-	lpf.Save()
+	_ = lpf.Save()
 }
 
 func (fw *FWindow) reloadProfileSelector(set string) {

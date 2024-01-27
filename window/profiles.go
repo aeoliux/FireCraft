@@ -13,7 +13,7 @@ type LProfile struct {
 	Type          string `json:"type"`
 	LastVersionId string `json:"lastVersionId"`
 	GameDir       string `json:"gameDir"`
-	JavaBin       string `json:"javaBin"`
+	JavaDir       string `json:"javaDir"`
 	JavaArgs      string `json:"javaArgs"`
 }
 
@@ -28,7 +28,7 @@ type LauncherProfiles struct {
 	PreviousProfile string
 }
 
-func (l LauncherProfiles) Save() error {
+func (l *LauncherProfiles) Save() error {
 	pth := path.Join(downloader.MinecraftDir, "launcher_profiles.json")
 
 	bt, err := json.Marshal(l)
@@ -68,4 +68,5 @@ func loadProfiles() (*LauncherProfiles, error) {
 
 func (l *LauncherProfiles) deleteProfile(name string) {
 	delete(l.Profiles, name)
+	_ = l.Save()
 }

@@ -3,6 +3,7 @@ package window
 import (
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/zapomnij/firecraft/pkg/auth"
@@ -14,16 +15,14 @@ import (
 func (fw *FWindow) Launch() {
 	defer fw.end()
 
+	fw.logger.Clear()
+
 	if err := os.Chdir(downloader.MinecraftDir); err != nil {
 		fw.appendToLog("launcher: failed to change to .minecraft directory\n")
 		//fw.end()
 		return
 	}
 
-	fw.appendToLog("launcher: clearing natives\n")
-	if err := os.RemoveAll(downloader.NativesDir); err != nil && !os.IsNotExist(err) {
-		fw.appendToLog("launcher: failed to clear natives, game may not work properly\n")
-	}
 	if err := os.MkdirAll(downloader.NativesDir, os.ModePerm); err != nil {
 		fw.appendToLog("launcher: failed to create natives directory\n")
 		return
@@ -31,11 +30,22 @@ func (fw *FWindow) Launch() {
 
 	fw.playBt.SetEnabled(false)
 
+	prof := LProfile{}
 	selected := fw.profilesSelector.CurrentText()
 	if selected == "New profile" {
-		fw.appendToLog("launcher: template profile selected\n")
-		//fw.end()
-		return
+		fw.appendToLog("launcher: template profile selected. Launching latest version\n")
+		prof.JavaArgs = "-Xmx2048M"
+		prof.LastVersionId = vm.Latest.Release
+	} else {
+		prof = lpf.Profiles[selected]
+		if prof.GameDir != "" {
+			_ = downloader.MakeAllDirs(&prof.GameDir)
+		}
+	}
+
+	fw.appendToLog("launcher: clearing natives\n")
+	if err := os.RemoveAll(downloader.NativesDir); err != nil && !os.IsNotExist(err) {
+		fw.appendToLog("launcher: failed to clear natives, game may not work properly\n")
 	}
 
 	accToken, uuid, haveBoughtTheGame := "", "", false
@@ -75,38 +85,33 @@ func (fw *FWindow) Launch() {
 		}
 	}
 
-	prof := lpf.Profiles[selected]
-	if prof.GameDir != "" {
-		downloader.MakeAllDirs(&prof.GameDir)
-	}
-
 	if wd, err := os.Getwd(); err == nil {
 		fw.appendToLog(fmt.Sprintf("launcher: current working directory '%s'. Selected version is %s\n", wd, prof.LastVersionId))
 	}
 
 	fw.appendToLog(fmt.Sprintf("launcher: downloading %s.json\n", prof.LastVersionId))
-	vjson, err := downloader.NewClientJSON(*vm, prof.LastVersionId)
+	vJson, err := downloader.NewClientJSON(*vm, prof.LastVersionId)
 	if err != nil {
 		fw.appendToLog(fmt.Sprintf("launcher: version %s error '%s'\n", prof.LastVersionId, err))
 		//fw.end()
 		return
 	}
 
-	if prof.JavaBin == "" {
-		jbin := javafind.FindJava(vjson.JavaVersion.MajorVersion)
-		if jbin == nil {
+	if prof.JavaDir == "" {
+		jvDir := javafind.FindJava(vJson.JavaVersion.MajorVersion)
+		if jvDir == nil {
 			fw.appendToLog("launcher: failed to find Java automatically. Specify Java binary path in profile\n")
 			//fw.end()
 			return
 		}
 
-		prof.JavaBin = *jbin
+		prof.JavaDir = *jvDir
 	}
 
 	classpath, assetsDone, ch := "", false, make(chan string)
 	fw.appendToLog("launcher: starting downloader\n")
-	go vjson.FetchLibraries(ch)
-	go vjson.GetAssets(ch)
+	go vJson.FetchLibraries(ch)
+	go vJson.GetAssets(ch)
 	for {
 		msg := <-ch
 
@@ -129,7 +134,7 @@ func (fw *FWindow) Launch() {
 	}
 
 	fw.appendToLog("launcher: starting Minecraft\n")
-	run := runner.NewRunner(fw.usernameTv.Text(), prof.JavaBin, classpath, prof.JavaArgs, *vjson, downloader.Ai)
+	run := runner.NewRunner(fw.usernameTv.Text(), path.Join(prof.JavaDir, "bin", "java"), classpath, prof.JavaArgs, *vJson, downloader.Ai)
 	if uuid != "" && accToken != "" {
 		run.SetUpMicrosoft(uuid, accToken, haveBoughtTheGame)
 	}

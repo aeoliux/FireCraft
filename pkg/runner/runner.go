@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -116,7 +115,6 @@ func (r Runner) parseMCArg(arg string) string {
 }
 
 func (r Runner) Run() error {
-	fmt.Println("a")
 	cmd := []string{r.JavaBinary}
 	cmd = append(cmd, strings.Split(r.JavaArgs, " ")...)
 
