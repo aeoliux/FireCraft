@@ -39,6 +39,8 @@ func (v VersionJSON) GetAssets(log chan string) error {
 		return err
 	}
 
+	Ai.Virtual = false
+	Ai.MapToResources = false
 	if err := json.Unmarshal(img, &Ai); err != nil {
 		log <- "error: " + err.Error()
 		return err
