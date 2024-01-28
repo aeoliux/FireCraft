@@ -2,6 +2,7 @@ package window
 
 import (
 	"fmt"
+	"github.com/therecipe/qt/gui"
 	"os"
 	"path"
 	"strings"
@@ -15,6 +16,7 @@ func (fw *FWindow) Launch() {
 	defer fw.end()
 
 	fw.logger.Clear()
+	fw.gameLogger.Clear()
 
 	if err := os.Chdir(downloader.MinecraftDir); err != nil {
 		fw.appendToLog("launcher: failed to change to .minecraft directory\n")
@@ -106,7 +108,27 @@ func (fw *FWindow) Launch() {
 	}
 
 	fw.appendToLog("launcher: starting Minecraft\n")
-	run := runner.NewRunner(fw.usernameTv.Text(), path.Join(prof.JavaDir, "bin", "java"), classpath, prof.JavaArgs, *vJson, downloader.Ai)
+	outputChannel := make(chan string)
+	go func() {
+		for {
+			msg := <-outputChannel
+			if msg == "EOF" {
+				break
+			}
+			fmt.Print(msg)
+
+			fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
+			fw.gameLogger.InsertPlainText(msg)
+
+			shrinker := fw.gameLogger.ToPlainText()
+			if len(shrinker) > 10240 {
+				fw.gameLogger.SetPlainText(shrinker[len(shrinker)-10240:])
+				fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
+			}
+		}
+	}()
+
+	run := runner.NewRunner(fw.usernameTv.Text(), path.Join(prof.JavaDir, "bin", "java"), classpath, prof.JavaArgs, *vJson, downloader.Ai, outputChannel)
 	if uuid != "" && accToken != "" {
 		run.SetUpMicrosoft(uuid, accToken, haveBoughtTheGame)
 	}

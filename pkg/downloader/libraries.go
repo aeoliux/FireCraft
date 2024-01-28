@@ -1,8 +1,6 @@
 package downloader
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"path"
@@ -23,9 +21,9 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 	verClass := filepath.Join(VersionDir, v.Id, v.Id+".jar")
 	classpath := ""
 
-	if v.Downloads != nil && !checkSum(verClass, v.Downloads.Client.Sha1) {
+	if v.Downloads != nil && !CheckSumByPath(verClass, v.Downloads.Client.Sha1) {
 		log <- "downloader: " + v.Id + ".jar"
-		if _, err := DownloadFile(v.Downloads.Client.Url, verClass); err != nil {
+		if err := DownloadAndCheck(verClass, v.Downloads.Client.Url, v.Downloads.Client.Sha1); err != nil {
 			log <- "error: " + err.Error()
 			return err
 		}
@@ -59,9 +57,9 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 		}
 		if j.Downloads != nil && j.Downloads.Artifact != nil {
 			pth := filepath.Join(LibrariesDir, j.Downloads.Artifact.Path)
-			if !checkSum(pth, j.Downloads.Artifact.Sha1) {
+			if !CheckSumByPath(pth, j.Downloads.Artifact.Sha1) {
 				log <- "downloader: downloading library '" + *j.Name + "'"
-				if err := getLib(path.Join(strings.Split(pth, "\\")...), j.Downloads.Artifact.Url); err != nil {
+				if err := DownloadAndCheck(path.Join(strings.Split(pth, "\\")...), j.Downloads.Artifact.Url, j.Downloads.Artifact.Sha1); err != nil {
 					log <- "error: " + err.Error()
 					return err
 				}
@@ -86,9 +84,9 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 				if j.Downloads != nil {
 					classifier := (*j.Downloads.Classifiers)[native]
 					pth = filepath.Join(LibrariesDir, classifier.Path)
-					if !checkSum(pth, classifier.Sha1) {
+					if !CheckSumByPath(pth, classifier.Sha1) {
 						log <- "downloader: downloading native '" + classifier.Path + "'"
-						if err := getLib(path.Join(strings.Split(pth, "\\")...), classifier.Url); err != nil {
+						if err := DownloadAndCheck(path.Join(strings.Split(pth, "\\")...), classifier.Url, classifier.Sha1); err != nil {
 							log <- "error: " + err.Error()
 							return err
 						}
@@ -127,27 +125,4 @@ func (v VersionJSON) FetchLibraries(log chan string) error {
 	log <- classpath
 
 	return nil
-}
-
-func getLib(out, url string) error {
-	outDir := path.Dir(out)
-	if err := os.MkdirAll(outDir, os.ModePerm); err != nil {
-		return err
-	}
-
-	_, err := DownloadFile(url, out)
-	return err
-}
-
-func checkSum(path, sha1check string) bool {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return false
-	}
-
-	sha1Engine := sha1.New()
-	sha1Engine.Write(data)
-	sha1Hash := hex.EncodeToString(sha1Engine.Sum(nil))
-
-	return sha1Hash == sha1check
 }

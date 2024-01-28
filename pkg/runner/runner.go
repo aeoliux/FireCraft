@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -18,20 +17,24 @@ type Runner struct {
 	JavaArgs   string
 	AssetIndex downloader.AssetIndex
 
+	OutputChannel chan string
+
 	Xuid              *string
 	Uuid              *string
 	AccessToken       *string
 	HaveBoughtTheGame bool
 }
 
-func NewRunner(username, javabinary, classpath string, javaargs string, verjson downloader.VersionJSON, assetIndex downloader.AssetIndex) *Runner {
+func NewRunner(username, javabinary, classpath string, javaargs string, verjson downloader.VersionJSON,
+	assetIndex downloader.AssetIndex, output chan string) *Runner {
 	return &Runner{
-		Username:   username,
-		Version:    verjson,
-		JavaBinary: javabinary,
-		JavaArgs:   javaargs,
-		Classpath:  classpath,
-		AssetIndex: assetIndex,
+		Username:      username,
+		Version:       verjson,
+		JavaBinary:    javabinary,
+		JavaArgs:      javaargs,
+		Classpath:     classpath,
+		AssetIndex:    assetIndex,
+		OutputChannel: output,
 	}
 }
 
@@ -165,10 +168,22 @@ func (r Runner) Run() error {
 	}
 
 	run := exec.Command(cmd[0], cmd[1:]...)
-	run.Stdout = os.Stdout
-	run.Stderr = os.Stderr
-	if err := run.Run(); err != nil {
+	stdout, err := run.StdoutPipe()
+	if err != nil {
 		return err
+	}
+	run.Stderr = run.Stdout
+	if err := run.Start(); err != nil {
+		return err
+	}
+	for {
+		tmp := make([]byte, 256)
+		_, err := stdout.Read(tmp)
+		r.OutputChannel <- string(tmp)
+		if err != nil {
+			r.OutputChannel <- "EOF"
+			break
+		}
 	}
 
 	return nil

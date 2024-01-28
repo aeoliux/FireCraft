@@ -74,10 +74,10 @@ func (v VersionJSON) GetAssets(log chan string) error {
 		} else {
 			out = path.Join(outDir, v.Hash)
 		}
-		if !checkSum(out, v.Hash) {
-			log <- "downloader: downloading " + k
+		if !CheckSumByPath(out, v.Hash) {
+			log <- "downloader: downloading " + k + " (" + v.Hash + ")"
 			url := fmt.Sprintf("https://resources.download.minecraft.net/%s/%s", v.Hash[:2], v.Hash)
-			if _, err = DownloadFile(url, out); err != nil {
+			if err = DownloadAndCheck(out, url, v.Hash); err != nil {
 				log <- "error: " + err.Error()
 				return err
 			}

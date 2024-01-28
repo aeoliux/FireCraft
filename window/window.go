@@ -20,8 +20,9 @@ type FWindow struct {
 	container *widgets.QWidget
 	layout    *widgets.QGridLayout
 
-	logger   *widgets.QTextEdit
-	notebook *widgets.QTabWidget
+	gameLogger *widgets.QPlainTextEdit
+	logger     *widgets.QPlainTextEdit
+	notebook   *widgets.QTabWidget
 
 	ms *MSTab
 
@@ -61,9 +62,12 @@ func NewFWindow() *FWindow {
 	this.layout.SetContentsMargins(0, 0, 0, 0)
 
 	this.notebook = widgets.NewQTabWidget(this.container)
-	this.logger = widgets.NewQTextEdit(this.notebook)
+	this.logger = widgets.NewQPlainTextEdit(this.notebook)
 	this.logger.SetReadOnly(true)
 	this.notebook.AddTab(this.logger, "Launcher logs")
+	this.gameLogger = widgets.NewQPlainTextEdit(this.notebook)
+	this.gameLogger.SetReadOnly(true)
+	this.notebook.AddTab(this.gameLogger, "Game logs")
 	this.layout.AddWidget(this.notebook)
 
 	this.bottomBar = widgets.NewQWidget(this.container, 0)
@@ -155,10 +159,16 @@ func (fw *FWindow) reloadProfileSelector(set string) {
 func (fw *FWindow) appendToLog(msg string) {
 	fw.logger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
 	fw.logger.InsertPlainText(msg)
+
+	shrinker := fw.logger.ToPlainText()
+	if len(shrinker) > 10240 {
+		fw.logger.SetPlainText(shrinker[len(shrinker)-10240:])
+		fw.logger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
+	}
 }
 
 func (fw *FWindow) macOSFix() {
-	fw.logger.SetText("Information for macOS users:\n\nYou should use JVM from homebrew")
+	fw.logger.SetPlainText("Information for macOS users:\n\nYou should use JVM from homebrew")
 	fw.userLay.SetContentsMargins(5, 5, 5, 5)
 	fw.profilesLay.SetContentsMargins(5, 3, 5, 5)
 }
