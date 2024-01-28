@@ -6,7 +6,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/zapomnij/firecraft/pkg/auth"
 	"github.com/zapomnij/firecraft/pkg/downloader"
 	"github.com/zapomnij/firecraft/pkg/javafind"
 	"github.com/zapomnij/firecraft/pkg/runner"
@@ -28,8 +27,6 @@ func (fw *FWindow) Launch() {
 		return
 	}
 
-	fw.playBt.SetEnabled(false)
-
 	prof := LProfile{}
 	selected := fw.profilesSelector.CurrentText()
 	if selected == "New profile" {
@@ -50,39 +47,14 @@ func (fw *FWindow) Launch() {
 
 	accToken, uuid, haveBoughtTheGame := "", "", false
 	if fw.usernameTv.Text() == "" {
-		if fw.ms.RedirectLink.Text() != "" {
-			au, err := auth.NewAuthentication(fw.ms.RedirectLink.Text())
-			if err != nil {
-				fw.appendToLog("launcher: " + err.Error() + "\n")
-				//fw.end()
-				return
-			}
+		fw.appendToLog("launcher: username not specified\n")
+		return
+	}
 
-			fw.appendToLog("launcher: authenticating Minecraft\n")
-			mc, err := auth.NewMinecraftAuthentication(au.MsAccessToken, au.HtClient)
-			if err != nil {
-				fw.appendToLog("launcher: " + err.Error() + "\n")
-				//fw.end()
-				return
-			}
-
-			fw.appendToLog("launcher: fetching profile\n")
-			usrProf, err := mc.GetProfile()
-			if err != nil {
-				fw.appendToLog("launcher: " + err.Error() + "\n")
-				//fw.end()
-				return
-			}
-
-			haveBoughtTheGame = mc.OwnsGame()
-			accToken = mc.MinecraftToken
-			uuid = usrProf.Id
-			fw.usernameTv.SetText(usrProf.Name)
-		} else {
-			fw.appendToLog("launcher: missing username\n")
-			//fw.end()
-			return
-		}
+	if fw.ms.Authed {
+		accToken = fw.ms.AccessToken
+		uuid = fw.ms.Uuid
+		haveBoughtTheGame = fw.ms.HaveBoughtTheGame
 	}
 
 	if wd, err := os.Getwd(); err == nil {
@@ -155,10 +127,6 @@ func (fw *FWindow) end() {
 		fw.appendToLog("launcher: failed to change to .minecraft/launcher directory\n")
 	}
 
-	if fw.ms.RedirectLink.Text() != "" {
-		fw.usernameTv.SetText("")
-		lpf.Save()
-	}
-	fw.Window.SetVisible(true)
 	fw.playBt.SetEnabled(true)
+	fw.Window.SetVisible(true)
 }

@@ -85,7 +85,10 @@ func NewFWindow() *FWindow {
 	this.profilesLay.AddWidget(this.editProfile)
 
 	this.playBt = widgets.NewQPushButton2("Play", this.bottomBar)
-	this.playBt.ConnectClicked(func(checked bool) { go this.Launch() })
+	this.playBt.ConnectClicked(func(checked bool) {
+		this.playBt.SetEnabled(false)
+		go this.Launch()
+	})
 	this.playBt.SetFixedHeight(60)
 	this.playBt.SetFixedWidth(300)
 
@@ -110,7 +113,7 @@ func NewFWindow() *FWindow {
 	this.Window.SetLayout(this.layout)
 
 	if downloader.OperatingSystem == "osx" {
-		this.macOSfix()
+		this.macOSFix()
 	}
 
 	return &this
@@ -123,7 +126,7 @@ func (fw *FWindow) updatePreviousProfile(text string) {
 	}
 }
 
-func (fw *FWindow) editProfileHandle(checked bool) {
+func (fw *FWindow) editProfileHandle(_ bool) {
 	epw := NewEditProfileWindow(fw)
 	epw.Window.Resize2(300, 200)
 	epw.Window.Show()
@@ -154,7 +157,7 @@ func (fw *FWindow) appendToLog(msg string) {
 	fw.logger.InsertPlainText(msg)
 }
 
-func (fw *FWindow) macOSfix() {
+func (fw *FWindow) macOSFix() {
 	fw.logger.SetText("Information for macOS users:\n\nYou should use JVM from homebrew")
 	fw.userLay.SetContentsMargins(5, 5, 5, 5)
 	fw.profilesLay.SetContentsMargins(5, 3, 5, 5)
