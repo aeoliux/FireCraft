@@ -16,9 +16,9 @@ func FindJava(version uint) *string {
 		version = 8
 	}
 
-	if downloader.OperatingSystem == "linux" {
-		var jvms, dirNames []string
+	var jvms, dirNames []string
 
+	if downloader.OperatingSystem == "linux" {
 		// Find system JVMs directory
 		_, err := os.Stat("/usr/bin/java")
 		if !os.IsNotExist(err) {
@@ -75,23 +75,28 @@ func FindJava(version uint) *string {
 				}
 			}
 		}
+
+		return nil
 	} else if downloader.OperatingSystem == "windows" {
-		dirNames := []string{"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"}
-		for _, jvDir := range dirNames {
-			stat, err := os.Stat(jvDir)
-			if !os.IsNotExist(err) && stat.IsDir() {
-				javaDirs := []string{filepath.Join(jvDir, fmt.Sprintf("jre-1.%d", version)), filepath.Join(jvDir, fmt.Sprintf("jre-%d", version))}
-				for _, vmDir := range javaDirs {
-					stat, err := os.Stat(vmDir)
-					if !os.IsNotExist(err) && stat.IsDir() {
-						ret := vmDir
-						return &ret
-					}
+		jvms = []string{"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"}
+		dirNames = []string{fmt.Sprintf("jre-1.%d", version), fmt.Sprintf("jre-%d", version)}
+	} else if downloader.OperatingSystem == "osx" {
+		jvms = []string{"/usr/local/opt/", "/Library/Java/JavaVirtualMachines"}
+		dirNames = []string{fmt.Sprintf("openjdk@%d", version), fmt.Sprintf("openjdk-%d.jdk", version)}
+	}
+
+	for _, javaDir := range jvms {
+		stat, err := os.Stat(javaDir)
+		if !os.IsNotExist(err) && stat.IsDir() {
+			for _, jvmDir := range dirNames {
+				fpth := filepath.Join(javaDir, jvmDir, "bin", "java")
+				stat, err = os.Stat(fpth)
+				if !os.IsNotExist(err) && !stat.IsDir() {
+					ret := filepath.Join(javaDir, jvmDir)
+					return &ret
 				}
 			}
 		}
-	} else if downloader.OperatingSystem == "osx" {
-
 	}
 
 	return nil

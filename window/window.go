@@ -63,6 +63,9 @@ func NewFWindow() *FWindow {
 	this.notebook = widgets.NewQTabWidget(this.container)
 	this.logger = widgets.NewQTextEdit(this.notebook)
 	this.logger.SetReadOnly(true)
+	if downloader.OperatingSystem == "osx" {
+		this.logger.SetText("Information for macOS users:\n\nYou should use JVM from homebrew")
+	}
 	this.notebook.AddTab(this.logger, "Launcher logs")
 	this.layout.AddWidget(this.notebook)
 

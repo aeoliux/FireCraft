@@ -2,7 +2,7 @@
 An open source Minecraft Launcher written in Go which uses Qt for GUI. 
 
 ### Supported operating systems
-FireCraft currently supports Linux and Windows... and macOS, but without Java finder (also working on that).
+FireCraft currently supports Linux, macOS and Windows.
 
 ### Versions that don't work
 - anything newer than 1.19, including 1.19 (due to changed management over native libraries, working on that, please be patient)
