@@ -28,9 +28,7 @@ linux-install:
 	mkdir -p $(HOME)/.minecraft
 	rm -rf $(HOME)/.minecraft/launcher
 	cp -pr ./deploy/linux $(HOME)/.minecraft/launcher
-	[ -f ./deploy/linux/FireCraft ] && \
-		desktop-file-install --dir=$(HOME)/.local/share/applications ./share/applications/FireCraft.desktop || \
-		desktop-file-install --dir=$(HOME)/.local/share/applications ./share/applications/firecraft.desktop
+	desktop-file-install --dir=$(HOME)/.local/share/applications ./share/applications/firecraft.desktop
 
 linux-uninstall:
 	[ -f $(HOME)/.minecraft/launcher/FireCraft -o -f $(HOME)/.minecraft/launcher/firecraft ] && \

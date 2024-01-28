@@ -1,6 +1,0 @@
-[Desktop Entry]
-Name=FireCraft
-Terminal=false
-Exec=/usr/bin/env sh -c "exec ~/.minecraft/launcher/FireCraft"
-Type=Application
-Categories=Game;
