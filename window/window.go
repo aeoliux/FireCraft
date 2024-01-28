@@ -63,9 +63,6 @@ func NewFWindow() *FWindow {
 	this.notebook = widgets.NewQTabWidget(this.container)
 	this.logger = widgets.NewQTextEdit(this.notebook)
 	this.logger.SetReadOnly(true)
-	if downloader.OperatingSystem == "osx" {
-		this.logger.SetText("Information for macOS users:\n\nYou should use JVM from homebrew")
-	}
 	this.notebook.AddTab(this.logger, "Launcher logs")
 	this.layout.AddWidget(this.notebook)
 
@@ -112,6 +109,10 @@ func NewFWindow() *FWindow {
 	this.container.SetLayout(this.layout)
 	this.Window.SetLayout(this.layout)
 
+	if downloader.OperatingSystem == "osx" {
+		this.macOSfix()
+	}
+
 	return &this
 }
 
@@ -151,4 +152,10 @@ func (fw *FWindow) reloadProfileSelector(set string) {
 func (fw *FWindow) appendToLog(msg string) {
 	fw.logger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
 	fw.logger.InsertPlainText(msg)
+}
+
+func (fw *FWindow) macOSfix() {
+	fw.logger.SetText("Information for macOS users:\n\nYou should use JVM from homebrew")
+	fw.userLay.SetContentsMargins(5, 5, 5, 5)
+	fw.profilesLay.SetContentsMargins(5, 3, 5, 5)
 }
