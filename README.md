@@ -1,5 +1,5 @@
 # FireCraft
-An open source Minecraft Launcher written in Go which uses Qt for GUI. 
+An open source Minecraft Launcher written in Go which uses Qt5 for GUI. 
 
 ### Supported operating systems
 FireCraft currently supports Linux, macOS and Windows.
@@ -9,12 +9,19 @@ FireCraft currently supports Linux, macOS and Windows.
 - 1.8.x - unknown issue unfortunately
 
 ### Launching Minecraft
-Launcher installation on Linux:
+To set up Qt for Go, follow instructions at https://github.com/therecipe/qt/wiki/Installation
+
+#### Linux and macOS:
+If you're using homebrew Qt on macOS, first do `export QT_HOMEBREW=true`.
+
+To deploy app:
 ```sh
-make linux-install
+make clean deploy # after that, you should see something like ./deploy/darwin/firecraft.app or ./deploy/linux/firecraft
+make linux-install # can be used on Linux to install launcher with its desktop files
 ```
 
-Compilation on Windows (it should be done under MSYS2 or cygwin):
+#### Windows (under MSYS2):
+Unfortunately deployment doesn't work.
 ```sh
 make clean firecraft
 ./firecraft.exe # launcher's .exe
@@ -22,3 +29,6 @@ make clean firecraft
 
 ### Minecraft Premium support
 Works!
+
+### Libs which were used
+- Qt5 bindings for Go: https://github.com/therecipe/qt
