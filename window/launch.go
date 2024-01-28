@@ -14,25 +14,23 @@ import (
 
 func (fw *FWindow) Launch() {
 	defer fw.end()
+	fw.gameLogger.SetPlainText("")
+	fw.ProgressBar.SetVisible(true)
 
-	fw.logger.Clear()
-	fw.gameLogger.Clear()
-
+	fw.updateProgressBar(0, "launcher: preparing environment")
 	if err := os.Chdir(downloader.MinecraftDir); err != nil {
-		fw.appendToLog("launcher: failed to change to .minecraft directory\n")
-		//fw.end()
+		fw.gameLogger.InsertPlainText("launcher: " + err.Error() + "\n")
 		return
 	}
 
 	if err := os.MkdirAll(downloader.NativesDir, os.ModePerm); err != nil {
-		fw.appendToLog("launcher: failed to create natives directory\n")
+		fw.gameLogger.InsertPlainText("launcher: " + err.Error() + "\n")
 		return
 	}
 
 	prof := LProfile{}
 	selected := fw.profilesSelector.CurrentText()
 	if selected == "New profile" {
-		fw.appendToLog("launcher: template profile selected. Launching latest version\n")
 		prof.JavaArgs = "-Xmx2048M"
 		prof.LastVersionId = vm.Latest.Release
 	} else {
@@ -42,14 +40,13 @@ func (fw *FWindow) Launch() {
 		}
 	}
 
-	fw.appendToLog("launcher: clearing natives\n")
 	if err := os.RemoveAll(downloader.NativesDir); err != nil && !os.IsNotExist(err) {
-		fw.appendToLog("launcher: failed to clear natives, game may not work properly\n")
+		fw.gameLogger.InsertPlainText("launcher: couldn't delete natives directory. Game may not work properly\n")
 	}
 
 	accToken, uuid, haveBoughtTheGame := "", "", false
 	if fw.usernameTv.Text() == "" {
-		fw.appendToLog("launcher: username not specified\n")
+		fw.gameLogger.InsertPlainText("launcher: missing username or game not authenticated with Microsoft account\n")
 		return
 	}
 
@@ -60,54 +57,59 @@ func (fw *FWindow) Launch() {
 	}
 
 	if wd, err := os.Getwd(); err == nil {
-		fw.appendToLog(fmt.Sprintf("launcher: current working directory '%s'. Selected version is %s\n", wd, prof.LastVersionId))
+		fw.gameLogger.InsertPlainText("launcher: gameDir = " + wd + "\n")
 	}
 
-	fw.appendToLog(fmt.Sprintf("launcher: downloading %s.json\n", prof.LastVersionId))
+	fw.updateProgressBar(10, "launcher: getting version manifest")
 	vJson, err := downloader.NewClientJSON(*vm, prof.LastVersionId)
 	if err != nil {
-		fw.appendToLog(fmt.Sprintf("launcher: version %s error '%s'\n", prof.LastVersionId, err))
-		//fw.end()
+		fw.gameLogger.InsertPlainText("launcher: " + err.Error() + "\n")
 		return
 	}
 
+	fw.updateProgressBar(10, "launcher: finding Java")
 	if prof.JavaDir == "" {
 		jvDir := javafind.FindJava(vJson.JavaVersion.MajorVersion)
 		if jvDir == nil {
-			fw.appendToLog("launcher: failed to find Java automatically. Specify Java binary path in profile\n")
-			//fw.end()
+			fw.gameLogger.InsertPlainText(fmt.Sprintf("launcher: please install Java version %d\n", vJson.JavaVersion.MajorVersion))
 			return
 		}
 
 		prof.JavaDir = *jvDir
 	}
 
-	classpath, assetsDone, ch := "", false, make(chan string)
-	fw.appendToLog("launcher: starting downloader\n")
+	fw.updateProgressBar(5, "launcher: downloading libraries")
+	classpath, ch := "", make(chan string)
 	go vJson.FetchLibraries(ch)
+	for {
+		msg := <-ch
+
+		if strings.HasPrefix(msg, "error: ") {
+			fw.gameLogger.InsertPlainText("launcher: process failed '" + msg + "'\n")
+			return
+		} else if !strings.HasPrefix(msg, "downloader: ") {
+			classpath = msg
+			break
+		}
+
+		fw.updateProgressBar(0, msg)
+	}
+	fw.updateProgressBar(25, "launcher: downloading assets")
 	go vJson.GetAssets(ch)
 	for {
 		msg := <-ch
 
 		if strings.HasPrefix(msg, "error: ") {
-			fw.appendToLog(fmt.Sprintf("launcher: process failed '%s'\n", msg))
+			fw.gameLogger.InsertPlainText("launcher: process failed '" + msg + "'\n")
 			return
-		} else if !strings.HasPrefix(msg, "downloader: ") {
-			fw.appendToLog("downloader: libraries finished\n")
-			classpath = msg
 		} else if msg == "downloader: assets finished" {
-			fw.appendToLog(msg + "\n")
-			assetsDone = true
-		} else {
-			fw.appendToLog(msg + "\n")
-		}
-
-		if classpath != "" && assetsDone {
 			break
 		}
+
+		fw.updateProgressBar(0, msg)
 	}
 
-	fw.appendToLog("launcher: starting Minecraft\n")
+	fw.updateProgressBar(40, "launcher: setting up logger")
 	outputChannel := make(chan string)
 	go func() {
 		for {
@@ -117,13 +119,13 @@ func (fw *FWindow) Launch() {
 			}
 			fmt.Print(msg)
 
-			fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
+			//fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
 			fw.gameLogger.InsertPlainText(msg)
 
 			shrinker := fw.gameLogger.ToPlainText()
 			if len(shrinker) > 10240 {
-				fw.gameLogger.SetPlainText(shrinker[len(shrinker)-10240:])
-				fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
+				fw.gameLogger.InsertPlainText(shrinker[len(shrinker)-10240:])
+				//fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
 			}
 		}
 	}()
@@ -133,11 +135,12 @@ func (fw *FWindow) Launch() {
 		run.SetUpMicrosoft(uuid, accToken, haveBoughtTheGame)
 	}
 
+	fw.updateProgressBar(10, "launcher: starting Minecraft")
 	fw.Window.SetVisible(false)
 	if err := run.Run(); err != nil {
-		fw.appendToLog(fmt.Sprintf("launcher: %s\n", err))
+		fw.gameLogger.InsertPlainText("launcher: " + err.Error() + "\n")
 	} else {
-		fw.appendToLog("launcher: Minecraft exited with zero exit status (error hasn't occurred)\n")
+		fw.gameLogger.InsertPlainText("launcher: game exited with 0 exit status (no error)\n")
 	}
 
 	//fw.end()
@@ -146,9 +149,14 @@ func (fw *FWindow) Launch() {
 func (fw *FWindow) end() {
 	downloader.SetUpVariables(nil)
 	if err := os.Chdir(downloader.LauncherDir); err != nil {
-		fw.appendToLog("launcher: failed to change to .minecraft/launcher directory\n")
+		fw.gameLogger.InsertPlainText("launcher: please restart launcher due to '" + err.Error() + "'\n")
+		fw.Window.SetVisible(true)
+		return
 	}
 
+	fw.gameLogger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
 	fw.playBt.SetEnabled(true)
+	fw.ProgressBar.SetValue(0)
+	fw.ProgressBar.SetVisible(false)
 	fw.Window.SetVisible(true)
 }

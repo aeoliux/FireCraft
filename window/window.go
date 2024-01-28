@@ -4,7 +4,6 @@ import (
 	"log"
 
 	"github.com/therecipe/qt/core"
-	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/widgets"
 	"github.com/zapomnij/firecraft/pkg/downloader"
 )
@@ -20,9 +19,10 @@ type FWindow struct {
 	container *widgets.QWidget
 	layout    *widgets.QGridLayout
 
-	gameLogger *widgets.QPlainTextEdit
-	logger     *widgets.QPlainTextEdit
-	notebook   *widgets.QTabWidget
+	ProgressBar       *widgets.QProgressBar
+	ProgressBarStatus *widgets.QLabel
+	gameLogger        *widgets.QPlainTextEdit
+	notebook          *widgets.QTabWidget
 
 	ms *MSTab
 
@@ -62,13 +62,20 @@ func NewFWindow() *FWindow {
 	this.layout.SetContentsMargins(0, 0, 0, 0)
 
 	this.notebook = widgets.NewQTabWidget(this.container)
-	this.logger = widgets.NewQPlainTextEdit(this.notebook)
-	this.logger.SetReadOnly(true)
-	this.notebook.AddTab(this.logger, "Launcher logs")
 	this.gameLogger = widgets.NewQPlainTextEdit(this.notebook)
 	this.gameLogger.SetReadOnly(true)
 	this.notebook.AddTab(this.gameLogger, "Game logs")
 	this.layout.AddWidget(this.notebook)
+
+	this.ProgressBar = widgets.NewQProgressBar(this.container)
+	progressBarLayout := widgets.NewQVBoxLayout2(this.ProgressBar)
+	progressBarLayout.SetContentsMargins(0, 0, 0, 0)
+	this.ProgressBarStatus = widgets.NewQLabel2("status", this.ProgressBar, 0)
+	progressBarLayout.AddWidget(this.ProgressBarStatus, 0, core.Qt__AlignCenter)
+	this.ProgressBar.SetLayout(progressBarLayout)
+	this.ProgressBar.SetVisible(false)
+	this.ProgressBar.SetTextVisible(false)
+	this.layout.AddWidget(this.ProgressBar)
 
 	this.bottomBar = widgets.NewQWidget(this.container, 0)
 	this.bottomBar.SetFixedHeight(70)
@@ -156,19 +163,13 @@ func (fw *FWindow) reloadProfileSelector(set string) {
 	fw.profilesSelector.AddItem("New profile", core.NewQVariant())
 }
 
-func (fw *FWindow) appendToLog(msg string) {
-	fw.logger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
-	fw.logger.InsertPlainText(msg)
-
-	shrinker := fw.logger.ToPlainText()
-	if len(shrinker) > 10240 {
-		fw.logger.SetPlainText(shrinker[len(shrinker)-10240:])
-		fw.logger.MoveCursor(gui.QTextCursor__End, gui.QTextCursor__MoveAnchor)
-	}
+func (fw *FWindow) updateProgressBar(inc int, status string) {
+	fw.ProgressBar.SetValue(fw.ProgressBar.Value() + inc)
+	fw.ProgressBarStatus.SetText(status)
 }
 
 func (fw *FWindow) macOSFix() {
-	fw.logger.SetPlainText("Information for macOS users:\n\nYou should use JVM from homebrew")
+	fw.gameLogger.SetPlainText("Information for macOS users:\n\nYou should use JVM from homebrew")
 	fw.userLay.SetContentsMargins(5, 5, 5, 5)
 	fw.profilesLay.SetContentsMargins(5, 3, 5, 5)
 }

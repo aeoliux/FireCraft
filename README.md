@@ -30,8 +30,5 @@ make clean firecraft
 ### Minecraft Premium support
 Works for Microsoft accounts, see MS Authentication tab in the launcher.
 
-### Known bugs
-- Can crash when closing Minecraft and quickly running it again (confirmed on Linux).
-
 ### Libs which were used
 - Qt5 bindings for Go: https://github.com/therecipe/qt

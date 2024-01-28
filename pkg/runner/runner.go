@@ -177,11 +177,14 @@ func (r Runner) Run() error {
 		return err
 	}
 	for {
-		tmp := make([]byte, 256)
-		_, err := stdout.Read(tmp)
-		r.OutputChannel <- string(tmp)
+		tmp := make([]byte, 1024)
+		n, err := stdout.Read(tmp)
+		if n > 0 {
+			r.OutputChannel <- string(tmp[:n])
+		}
 		if err != nil {
 			r.OutputChannel <- "EOF"
+			stdout.Close()
 			break
 		}
 	}
