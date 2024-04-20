@@ -1,3 +1,6 @@
+# Disclaimer
+Because of Qt bindings not being updated for 4 years and not working on Silicon macs, project is discontinued.
+
 # FireCraft
 An open source Minecraft Launcher written in Go which uses Qt5 for GUI. 
 
